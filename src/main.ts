@@ -1,5 +1,5 @@
 import { app, PORT } from './app/app';
-import ConnectDatabase from './core/database/dbConfig';
+import {ConnectDatabase} from './core/database/dbConfig';
 import { log } from './core/utils';
 
 const bootstrap = async () => {
