@@ -1,9 +1,12 @@
-import { type Request, type Response, Router } from 'express';
+import { type Response, Router, Request } from 'express';
+import { users } from '../modules/users/user.route';
 
-const router:Router = Router();
+const router = Router();
 
 router.get('/', (req: Request, res: Response) => {
-	res.send('server is healthy');
+	res.send('Server is healthy');
 })
+
+router.use('/users', users);
 
 export default router;
