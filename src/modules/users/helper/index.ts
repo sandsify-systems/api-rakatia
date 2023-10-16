@@ -4,6 +4,8 @@ import { Exception } from '../../../core/utils';
 import moment from 'moment';
 import * as shortid from 'shortid';
 import { IUser } from '../../../core/database/models/user/user.model';
+import { userSubset } from '../dto/auth.dto';
+import _ from 'lodash';
 
 interface IAccessToken {
 	id: string;
@@ -43,9 +45,23 @@ export default class UserHelper {
 		return moment(codeExpiryDate).isBefore(currentTime);
 	};
 
-	public static doesUserExist = (user: IUser | null, email:string): void => {
+	public static doesUserExist = (user: IUser | null, email: string): void => {
 		if (user) {
 			throw new Exception(`User with email: ${email} already exist`, 422);
 		}
+	}
+
+	public static getUserSubset = (user: IUser): userSubset => {
+		const pick = _.pick(user, [
+			'firstName',
+			'lastName',
+			'email',
+			'phoneNumber',
+			'imageUrl',
+			'imagePublicId',
+			'role',
+			'_id'
+		]);
+		return pick;
 	}
 }

@@ -1,8 +1,7 @@
-import { Schema, model, Document } from 'mongoose';
+import { Schema, model, Document, Types } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import shortid from 'shortid';
 import moment from 'moment';
-import { IRole } from './role.model';
 
 export interface IUser extends Document {
     firstName: string
@@ -18,11 +17,11 @@ export interface IUser extends Document {
     imagePublicId: string
     loginDevice: string,
     reference: string
-    isModified(password: string): boolean
-    role:IRole['_id']
+    // isModified(password: string): boolean
+    role:Types.ObjectId
 }
 
-export const UserSchema = new Schema<IUser>({
+export const UserSchema:Schema = new Schema<IUser>({
     email: {
         type: String,
         required: [true, 'please provide a valid email address'],
@@ -80,7 +79,8 @@ export const UserSchema = new Schema<IUser>({
         type: Number
     },
     role: {
-        types: Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
+        ref:'Role'
     }
 });
 
