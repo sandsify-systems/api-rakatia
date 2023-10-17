@@ -7,7 +7,7 @@
     "build": "rimraf dist && tsc --build",
     "clean": "tsc --build --clean",
     "start:dev": "cross-env NODE_ENV=dev ts-node-dev ./src/main.ts",
-    "start": "node dist/main.js",
+    "start": "node ./dist/main.js",
     "lint": "eslint src/**/*.ts",
     "format": "eslint src/**/*.ts --fix",
     "prepare": "husky install",
@@ -59,7 +59,6 @@
     "@types/jest": "^29.5.5",
     "@types/jsonwebtoken": "^9.0.3",
     "@types/lodash": "^4.14.199",
-    "@types/moment": "^2.13.0",
     "@types/mongoose": "^5.11.97",
     "@types/node": "^20.6.3",
     "@types/nodemailer": "^6.4.11",
@@ -85,6 +84,6 @@
     "typescript": "^5.2.2"
   },
   "engines": {
-    "node": ">=18.18.0 <19.0.0"
+    "node": ">=18.12.1 <19.0.0"
   }
 }
