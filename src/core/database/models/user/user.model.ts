@@ -17,7 +17,6 @@ export interface IUser extends Document {
     imagePublicId: string
     loginDevice: string,
     reference: string
-    // isModified(password: string): boolean
     role:Types.ObjectId
 }
 
@@ -116,5 +115,7 @@ UserSchema.virtual('isLocked').get(function (): boolean {
 });
 
 const User = model<IUser>('User', UserSchema);
+
+export type UserModelType = typeof User;
 
 export default User;

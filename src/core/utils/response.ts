@@ -5,6 +5,16 @@ interface CustomObj<T = any> {
 	[key: string]: T;
 }
 
+export interface IResMsg {
+	(
+		message: string,
+		data: CustomObj,
+		res: Response,
+		statusCode: number,
+		status: string
+	): void
+}
+
 const resMsg = (
 	message: string,
 	data: CustomObj,

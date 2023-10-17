@@ -4,21 +4,27 @@ import { Exception } from '../../../core/utils';
 import moment from 'moment';
 import * as shortid from 'shortid';
 import { IUser } from '../../../core/database/models/user/user.model';
-import { userSubset } from '../dto/auth.dto';
+import { userSubset, IAccessToken, IUserHelper } from '../dto/service.dto';
 import _ from 'lodash';
+import { UserModelType } from "../../../core/database/models/user/user.model";
+import { RoleModelType } from "../../../core/database/models/user/role.model";
 
-interface IAccessToken {
-	id: string;
-	email: string;
-}
+export default class UserHelper implements IUserHelper {
 
-export default class UserHelper {
-	public static async hashPassword(password: string) {
+	constructor(
+		protected user: UserModelType,
+		protected role: RoleModelType,
+	) {
+		this.user = user;
+		this.role = role;
+	}
+
+	async hashPassword(password: string): Promise<string> {
 		const hash = await bcryptjs.hash(password, 10);
 		return hash;
 	}
 
-	public static async comparePassword(password: string, hashedPassword: string) {
+	async comparePassword(password: string, hashedPassword: string): Promise<void> {
 		const verifiedPassword: boolean = await bcryptjs.compare(password, hashedPassword);
 
 		if (!verifiedPassword) {
@@ -26,7 +32,7 @@ export default class UserHelper {
 		}
 	}
 
-	public static generateAccessToken(data: IAccessToken): string {
+	generateAccessToken(data: IAccessToken): string {
 		const token = jwt.sign(
 			{ ...data, expireAt: '2hr' },
 			process.env.JWT_SECRET as string
@@ -34,24 +40,24 @@ export default class UserHelper {
 		return token;
 	}
 
-	public static createCode = (): string => {
+	createCode(): string {
 		const code: string = shortid.generate().replace('_', '');
 		const expiry: string = moment(new Date()).add(1, 'month').format('YYYY-MM-DD HH:mm:ss');
 		return `${code}|${expiry}`;
 	};
 
-	public static isCodeExpired = (codeExpiryDate: string): boolean => {
+	isCodeExpired(codeExpiryDate: string): boolean {
 		const currentTime: string = moment(new Date()).format('YYYY-MM-DD HH:mm:ss');
 		return moment(codeExpiryDate).isBefore(currentTime);
 	};
 
-	public static doesUserExist = (user: IUser | null, email: string): void => {
+	doesUserExist(user: IUser | null, email: string): void {
 		if (user) {
 			throw new Exception(`User with email: ${email} already exist`, 422);
 		}
 	}
 
-	public static getUserSubset = (user: IUser): userSubset => {
+	getUserSubset(user: IUser): userSubset {
 		const pick = _.pick(user, [
 			'firstName',
 			'lastName',
