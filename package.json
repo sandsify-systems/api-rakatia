@@ -4,7 +4,8 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "build": "rimraf dist && tsc --build",
+    "prebuild":"yarn install && rimraf dist",
+    "build": "tsc --build",
     "clean": "tsc --build --clean",
     "start:dev": "cross-env NODE_ENV=dev ts-node-dev ./src/main.ts",
     "start": "node ./dist/main.js",
