@@ -42,12 +42,16 @@ export default class UserHelper implements IUserHelper {
 
 	createCode(): string {
 		const code: string = shortid.generate().replace('_', '');
-		const expiry: string = moment(new Date()).add(1, 'month').format('YYYY-MM-DD HH:mm:ss');
+		const expiry = moment(new Date(), "YYYY-MM-DD HH:mm:ss").add(1, 'month').format("YYYY-MM-DD HH:mm:ss");
 		return `${code}|${expiry}`;
 	};
 
+	extractCode(code: string): string { return code.split('|')[0]; };
+
+	getCodeExpiry(code: string): string { return code.split('|')[1] };
+
 	isCodeExpired(codeExpiryDate: string): boolean {
-		const currentTime: string = moment(new Date()).format('YYYY-MM-DD HH:mm:ss');
+		const currentTime = moment(new Date(), "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss");
 		return moment(codeExpiryDate).isBefore(currentTime);
 	};
 
@@ -55,6 +59,28 @@ export default class UserHelper implements IUserHelper {
 		if (user) {
 			throw new Exception(`User with email: ${email} already exist`, 422);
 		}
+	}
+
+	createShortId(): string {
+		let id = shortid.generate();
+		return id.replace('-', '');
+	}
+
+	async createVerificationUrl(userId: string, code: string, path: string): Promise<string> {
+		/**
+		 * check if the current code has expired before attaching to link
+		 * If code has expired create a new one and update user data
+		*/
+		let verificationCode;
+		let codeExpiryDate = this.getCodeExpiry(code)
+		if (this.isCodeExpired(codeExpiryDate)) {
+			verificationCode = this.createCode();
+			await this.user.updateOne({ _id: userId }, { code: verificationCode });
+		} else {
+			verificationCode = code;
+		}
+		const app_url = process.env.APP_URL
+		return `${app_url}/${path}/${userId}-${this.createShortId()}-${this.extractCode(verificationCode)}-${this.createShortId()}`;
 	}
 
 	getUserSubset(user: IUser): userSubset {

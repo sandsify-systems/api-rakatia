@@ -4,10 +4,11 @@ import { FileArray } from 'express-fileupload';
 import { RoleModelType } from '../../core/database/models/user/role.model';
 import { UserModelType } from '../../core/database/models/user/user.model';
 import UserHelper from './helper';
+import { sendEmail } from '../../core/utils/mailer';
 
 export default class UserService extends UserHelper implements IUserService {
 
-	constructor(user: UserModelType, role: RoleModelType ) {
+	constructor(user: UserModelType, role: RoleModelType) {
 		super(user, role);
 	}
 
@@ -27,6 +28,13 @@ export default class UserService extends UserHelper implements IUserService {
 				await this.role.findOne({ name: 'staff' });
 
 			const $user = await new this.user({ ...data, role: userRole }).save();
+
+			// send user email verification
+			const { _id, code } = $user;
+			let link = await this.createVerificationUrl(_id, code, 'verify');
+			let testTemaplatee = `<div><a href=${link}>verify account</a></div>`
+			await sendEmail(email, testTemaplatee);
+
 			return this.getUserSubset($user);
 		} catch (err: any) {
 			log.error(err);

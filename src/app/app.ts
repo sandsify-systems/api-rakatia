@@ -9,9 +9,14 @@ import swaggerDefinition from '../core/swagger/swaggerDefinition';
 import swaggerUI from 'swagger-ui-express';
 import { log } from '../core/utils';
 import { Exception } from '../core/utils';
+import cors from 'cors';
 
 export const app: Application = express();
+const corsOptions: cors.CorsOptions = {
+  origin: []
+};
 
+app.use(cors(corsOptions));
 app.use(
   fileupload({
     createParentPath: true,

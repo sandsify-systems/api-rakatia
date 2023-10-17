@@ -101,7 +101,7 @@ UserSchema.pre<IUser>('validate', async function (next: any) {
 
         // Generate a code with expirery time and date for the user before saving
         const code: string = shortid.generate().replace('_', '');
-        const expiry: string = moment(new Date()).add(1, 'month').format('YYYY-MM-DD HH:mm:ss');
+        const expiry: string = moment(new Date(), "YYYY-MM-DD HH:mm:ss").add(1, 'month').format("YYYY-MM-DD HH:mm:ss");
         this.code = `${code}|${expiry}`;
 
         next();

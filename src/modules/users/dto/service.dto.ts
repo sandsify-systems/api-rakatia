@@ -15,8 +15,12 @@ export interface IUserHelper {
 	comparePassword(password: string, hashedPassword: string):Promise<void>
 	generateAccessToken(data: IAccessToken): string
 	createCode (): string
+	getCodeExpiry(code: string): string
+	extractCode(code: string): string
 	isCodeExpired (codeExpiryDate: string): boolean
 	doesUserExist(user: IUser | null, email: string): void
+	createShortId(): string
+	createVerificationUrl(userId: string, code: string, path: string): Promise<string>
 	getUserSubset (user: IUser): userSubset
 }
 
