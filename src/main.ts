@@ -1,3 +1,5 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
 import { app, PORT } from './app/app';
 import {ConnectDatabase} from './core/database/dbConfig';
 import { log } from './core/utils';

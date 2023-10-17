@@ -1,19 +1,15 @@
-import { userSubset, type IUserSignUp } from './dto/auth.dto';
+import { IUserService, userSubset, type IUserSignUp } from './dto/service.dto';
 import { Exception, log } from '../../core/utils';
 import { FileArray } from 'express-fileupload';
-import Role from '../../core/database/models/user/role.model';
-import User from '../../core/database/models/user/user.model';
+import { RoleModelType } from '../../core/database/models/user/role.model';
+import { UserModelType } from '../../core/database/models/user/user.model';
 import UserHelper from './helper';
+import { sendEmail } from '../../core/utils/mailer';
 
-export default class UserService {
-	userHelper: typeof UserHelper
-	user: typeof User
-	role: typeof Role
+export default class UserService extends UserHelper implements IUserService {
 
-	constructor() {
-		this.userHelper = UserHelper;
-		this.user = User;
-		this.role = Role
+	constructor(user: UserModelType, role: RoleModelType) {
+		super(user, role);
 	}
 
 	async signUp(data: IUserSignUp, upload: FileArray): Promise<userSubset> {
@@ -25,14 +21,21 @@ export default class UserService {
 			let user = await this.user.findOne({ email: email });
 
 			//check if user with the provided email already exist
-			this.userHelper.doesUserExist(user, email);
+			this.doesUserExist(user, email);
 
 			// default user role to staff if role type not present in request payload
-			const userRole = roleType ? await Role.findOne({ name: roleType }) :
+			const userRole = roleType ? await this.role.findOne({ name: roleType }) :
 				await this.role.findOne({ name: 'staff' });
 
 			const $user = await new this.user({ ...data, role: userRole }).save();
-			return this.userHelper.getUserSubset($user);
+
+			// send user email verification
+			const { _id, code } = $user;
+			let link = await this.createVerificationUrl(_id, code, 'verify');
+			let testTemaplatee = `<div><a href=${link}>verify account</a></div>`
+			await sendEmail(email, testTemaplatee);
+
+			return this.getUserSubset($user);
 		} catch (err: any) {
 			log.error(err);
 			const message = err.message ? err.message : 'Internal server error';
