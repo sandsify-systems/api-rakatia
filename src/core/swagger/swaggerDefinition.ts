@@ -1,5 +1,8 @@
 import swaggerJSDoc from 'swagger-jsdoc';
-import { signUpApiDoc } from '../../modules/users/doc/user.doc';
+import { 
+    signUpApiDoc,
+    signInApiDoc
+ } from '../../modules/users/doc/user.doc';
 
 const swaggerDefinition = swaggerJSDoc({
     swaggerDefinition: {
@@ -12,6 +15,9 @@ const swaggerDefinition = swaggerJSDoc({
         paths: {
             '/users/signup': {
                 ...signUpApiDoc,
+            },
+            '/users/signin': {
+                ...signInApiDoc,
             },
         },
     },

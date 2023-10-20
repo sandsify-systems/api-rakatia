@@ -11,7 +11,7 @@ export interface IResMsg {
 		data: CustomObj,
 		res: Response,
 		statusCode: number,
-		status: string
+		status?: string
 	): void
 }
 
@@ -20,7 +20,7 @@ const resMsg = (
 	data: CustomObj,
 	res: Response,
 	statusCode = 200,
-	status = 'success'
+	status:string = 'successful'
 ) => {
 	log.info(message);
 	res.status(statusCode).json({

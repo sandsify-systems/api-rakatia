@@ -13,8 +13,8 @@ export interface IUser extends Document {
     isVerified: boolean
     loginAttempts: number
     lockUntil: number
-    imageUrl: string
-    imagePublicId: string
+    imageUrl?: string
+    imagePublicId?: string
     loginDevice: string,
     reference: string
     role:Types.ObjectId

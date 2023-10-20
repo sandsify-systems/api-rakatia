@@ -1,5 +1,8 @@
-import { Router,Request, Response, NextFunction } from 'express';
-import { signUpValidation } from '../../core/validation/auth.validation';
+import { Router, Request, Response, NextFunction } from 'express';
+import {
+    signUpValidation,
+    signInValidation
+} from '../../core/validation/auth.validation';
 import { validateRequest } from '../../core/validation/index';
 import UserController from './user.controller';
 import User from '../../core/database/models/user/user.model';
@@ -19,7 +22,17 @@ users.post(
     '/signup',
     signUpValidation,
     validateRequest,
-    (req: Request, res: Response, next: NextFunction)=>userController.signUp(req, res, next)
+    (req: Request, res: Response, next: NextFunction) => userController.signUp(req, res, next)
+);
+
+/**
+ * Sigin API route
+ */
+users.post(
+    '/signin',
+    signInValidation,
+    validateRequest,
+    (req: Request, res: Response, next: NextFunction) => userController.signIn(req, res, next)
 );
 
 export default users;

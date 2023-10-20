@@ -19,9 +19,21 @@ export const signUpValidation = [
 		.isLength({ min: 11, max: 14 })
 		.withMessage('phoneNumber is required and must not be less than 11 or greater than 14 char'),
 	check('roleType')
-		.optional()
 		.isString()
-		.notEmpty()
+		.optional()
 		.isIn(['staff', 'admin', 'manager'])
-		.withMessage('role must be one of "staff","admin","manager"'),
+		.withMessage('role must be one of "staff","admin","manager"')
 ];
+
+export const signInValidation = [
+	check('email')
+		.isEmail()
+		.withMessage('email is not a valid email')
+		.notEmpty()
+		.withMessage('email is required'),
+	// check('phoneNumber')
+	// 	.optional()
+	// 	.isString()
+	// 	.withMessage('phoneNumber should be a string'),
+	check('password').isString().notEmpty().withMessage('password is required'),
+]

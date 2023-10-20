@@ -16,11 +16,20 @@ export default class UserController implements IUserController {
 
 	async signUp(req: Request, res: Response, next: NextFunction): Promise<void> {
 		try {
-			const upload = req.files as FileArray;
-			const data = await this.userService.signUp(req.body, upload);
-			this.resMsg('User account created successfully', data, res, 200, 'successful');
+			const imageFile = req.files as FileArray;
+			const data = await this.userService.signUp(req.body, imageFile);
+			this.resMsg('User account created successfully', data, res, 200);
 		} catch (error: any) {
 			next(error);
+		}
+	}
+
+	async signIn(req: Request, res: Response, next: NextFunction):Promise<void>{
+		try {
+			const data = await this.userService.signIn(req.body)
+			this.resMsg('User signin successful', data, res, 200)
+		} catch (error) {
+			next(error)
 		}
 	}
 }
