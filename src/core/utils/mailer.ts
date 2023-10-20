@@ -6,31 +6,31 @@ export interface MailOptions {
   to: string;
   subject: string;
   text: string;
-  html:string
+  html: string
 }
 
 const {
   NODEMAILER_SERVICE,
-  NODEMAILER_USER,
+  // NODEMAILER_USER,
   NODEMAILER_PASSWORD,
-  NODEMAILER_SENDER
+  // NODEMAILER_SENDER
 } = process.env;
 
 const transporter = nodemailer.createTransport({
-  service:  NODEMAILER_SERVICE as string | 'gmail',
+  service: NODEMAILER_SERVICE as string | 'gmail',
   auth: {
-    user: NODEMAILER_USER,
+    user: 'jidsfotech@gmail.com', //NODEMAILER_USER,
     pass: NODEMAILER_PASSWORD,
   },
 });
 
-export const sendEmail = async (receiverEmail: string, htmlTmeplate:string) => {
+export const sendEmail = async (receiverEmail: string, htmlTmeplate: string) => {
   const mailOptions: MailOptions = {
-    from: NODEMAILER_SENDER as string | 'jidsfotech@gmail.com',
+    from: 'jidsfotech@gmail.com', //NODEMAILER_SENDER as string,
     to: receiverEmail,
     subject: 'Verify Account',
     text: 'Verify your email to complete signup process',
-    html:htmlTmeplate
+    html: htmlTmeplate
   };
   try {
     await transporter.sendMail(mailOptions);
