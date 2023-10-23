@@ -30,6 +30,15 @@ const signInRequestBody = {
   }
 };
 
+const verifyAccountBody = {
+  userId: {
+    type: 'string',
+  },
+  code: {
+    type: 'string',
+  }
+};
+
 export const signUpApiDoc = {
   post: {
     description: 'Creates a new user account',
@@ -209,3 +218,78 @@ export const signInApiDoc = {
     },
   },
 };
+
+export const verifyAccount = {
+  post: {
+    description: 'Verify user account',
+    requestBody: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            required: ['userId', 'code'],
+            properties: {
+              ...verifyAccountBody
+            },
+          },
+        },
+      },
+    },
+    responses: {
+      '200': {
+        description: 'Response example',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                userId: {
+                  type: 'string'
+                }
+              },
+            },
+            example: {
+              status: 'success',
+              message: 'User verification successful',
+              data: {
+                'userId': '652a9deb54f77f7814bfe99f',
+              },
+            },
+          },
+        },
+      },
+      '404': {
+        description: 'The verification code provided is not valid',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                status: {
+                  type: 'string'
+                },
+                statusCode: {
+                  type: 'number'
+                },
+                message: {
+                  type: 'string'
+                },
+                data: {
+                  type: 'string'
+                }
+              },
+            },
+            example: {
+              status: 'error',
+              statusCode: 404,
+              message: 'The verification code provided is not valid.',
+              data: null
+            },
+          },
+        },
+      },
+      ...errorResponsesDoc(),
+    },
+  },
+}

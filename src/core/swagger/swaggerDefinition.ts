@@ -1,8 +1,9 @@
 import swaggerJSDoc from 'swagger-jsdoc';
-import { 
+import {
     signUpApiDoc,
-    signInApiDoc
- } from '../../modules/users/doc/user.doc';
+    signInApiDoc,
+    verifyAccount
+} from '../../modules/users/doc/user.doc';
 
 const swaggerDefinition = swaggerJSDoc({
     swaggerDefinition: {
@@ -13,12 +14,9 @@ const swaggerDefinition = swaggerJSDoc({
             description: 'Documentation for the Rakatia API',
         },
         paths: {
-            '/users/signup': {
-                ...signUpApiDoc,
-            },
-            '/users/signin': {
-                ...signInApiDoc,
-            },
+            '/users/signup': { ...signUpApiDoc },
+            '/users/signin': { ...signInApiDoc },
+            '/users/verify': { ...verifyAccount },
         },
     },
     basePath: '/',

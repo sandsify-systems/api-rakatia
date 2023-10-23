@@ -3,13 +3,15 @@ import {
 	userSubset,
 	IUserSignUp,
 	IUserSignIn,
-	IAccessToken
+	IAccessToken,
+	IVerifyAccount,
 } from './dto/service.dto';
 import { Exception } from '../../core/utils';
 import { FileArray } from 'express-fileupload';
 import { RoleModelType } from '../../core/database/models/user/role.model';
 import { UserModelType } from '../../core/database/models/user/user.model';
 import UserHelper from './helper';
+import { sendEmail } from '../../core/utils/mailer';
 
 export default class UserService extends UserHelper implements IUserService {
 
@@ -35,9 +37,9 @@ export default class UserService extends UserHelper implements IUserService {
 			const userRole = roleType ? await this.role.findOne({ name: roleType }) :
 				await this.role.findOne({ name: 'staff' });
 
-			let userData:any = {
+			let userData: any = {
 				...data,
-				role:userRole
+				role: userRole
 			}
 			if (imageFile) {
 				const { public_id, secure_url } = await this.uploadProfileImage(imageFile);
@@ -85,6 +87,50 @@ export default class UserService extends UserHelper implements IUserService {
 			const accessToken = this.generateAccessToken(this.getUserSubset(user));
 			return accessToken;
 		} catch (err: any) {
+			throw this.handleError(err);
+		}
+	}
+
+	/**
+	* verify user account service
+	* @param data
+	* @returns Boolean
+	*/
+	public async verifyAccount(data: IVerifyAccount): Promise<{userId:string}> {
+		try {
+			let { userId, code } = data;
+			const user = await this.user.findOne({ id: userId });
+
+			if (!user) {
+				throw new Exception(`There's no user account associated with the provided user_id:- ${userId}`, 404);
+			}
+
+			if (user.isVerified) {
+				throw new Exception('Account already verified please proceed to login', 404);
+			}
+
+			const verificationCode: string = this.extractCode(user.code);
+			const codeExpiryDate: string = this.extractCodeExpiry(user.code);
+			if (this.isCodeExpired(codeExpiryDate)) {
+				// Resend verification link
+				this.sendVerificationLink(user);
+				throw new Exception('verification link has expired please check your email for a new link', 404);
+			}
+
+			// Compare the provided code with the user code
+			if (code !== verificationCode) {
+				throw new Exception('The verification code provided is not valid', 404);
+			}
+			// updated user status to verified
+			await this.updateUser({ _id: userId }, { isVerified: true });
+
+			// Send welcome email to user after successful account verification
+			const {APP_URL} = process.env;
+			let testTemaplate = `<div><a href=${APP_URL}/login>Account averified please proceed to login</a></div>`;
+			await sendEmail(user.email, testTemaplate);
+
+			return {userId:userId};
+		} catch (err) {
 			throw this.handleError(err);
 		}
 	}
