@@ -37,3 +37,7 @@ export const signInValidation = [
 	// 	.withMessage('phoneNumber should be a string'),
 	check('password').isString().notEmpty().withMessage('password is required'),
 ]
+export const verifyValidation = [
+	check('userId').isString().notEmpty().withMessage('user id is required').withMessage('user id must be a string'),
+	check('code').isString().notEmpty().withMessage('verification code is required'),
+]

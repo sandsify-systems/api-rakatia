@@ -7,7 +7,8 @@ import { IUser } from '../../../core/database/models/user/user.model';
 import {
 	userSubset,
 	IAccessToken,
-	IUserHelper
+	IUserHelper,
+	Dictionary
 } from '../dto/service.dto';
 import _ from 'lodash';
 import { UserModelType } from "../../../core/database/models/user/user.model";
@@ -60,7 +61,7 @@ export default class UserHelper implements IUserHelper {
 
 	extractCode(code: string): string { return code.split('|')[0]; };
 
-	getCodeExpiry(code: string): string { return code.split('|')[1] };
+	extractCodeExpiry(code: string): string { return code.split('|')[1] };
 
 	isCodeExpired(codeExpiryDate: string): boolean {
 		const currentTime = moment(new Date(), "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss");
@@ -84,15 +85,16 @@ export default class UserHelper implements IUserHelper {
 		 * If code has expired create a new one and update user data
 		*/
 		let verificationCode;
-		let codeExpiryDate = this.getCodeExpiry(code)
+		let codeExpiryDate = this.extractCodeExpiry(code)
 		if (this.isCodeExpired(codeExpiryDate)) {
 			verificationCode = this.createCode();
-			await this.user.updateOne({ _id: userId }, { code: verificationCode });
+			await this.updateUser({ _id: userId }, { code: verificationCode })
+			// await this.user.updateOne({ _id: userId }, { code: verificationCode });
 		} else {
 			verificationCode = code;
 		}
 		const app_url = process.env.APP_URL
-		return `${app_url}/${path}/${userId}-${this.createShortId()}-${this.extractCode(verificationCode)}-${this.createShortId()}`;
+		return `${app_url}/${path}/${userId}_${this.createShortId()}_${this.extractCode(verificationCode)}_${this.createShortId()}`;
 	}
 
 	getUserSubset(user: IUser): userSubset {
@@ -131,7 +133,7 @@ export default class UserHelper implements IUserHelper {
 		// validate uploaded file
 		this.cloudinaryClient.validateImage(ext, profileImage.size);
 
-		const uploadPth: string = path.join(__dirname, `../../uploads/${profileImage.name}`);
+		const uploadPth: string = path.join(__dirname, `../../../uploads/${profileImage.name}`);
 
 		// move uploaded file from temp memory storage to "files dir"
 		await profileImage.mv(uploadPth);
@@ -140,5 +142,9 @@ export default class UserHelper implements IUserHelper {
 		// delete the uploaded image from the codebase after successful upload to cloudinary
 		this.cloudinaryClient.deleteTempUploads(uploadPth);
 		return imageUploadRes;
+	}
+
+	async updateUser(params: Dictionary, data: Dictionary): Promise<void> {
+		await this.user.updateOne(params, data);
 	}
 }

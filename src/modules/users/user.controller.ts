@@ -32,4 +32,13 @@ export default class UserController implements IUserController {
 			next(error)
 		}
 	}
+
+	async verifyAccount(req: Request, res: Response, next: NextFunction):Promise<void>{
+		try {
+			const data = await this.userService.verifyAccount(req.body)
+			this.resMsg('User verification successful', data, res, 200)
+		} catch (error) {
+			next(error)
+		}
+	}
 }
