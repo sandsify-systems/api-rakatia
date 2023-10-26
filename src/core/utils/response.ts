@@ -8,7 +8,7 @@ interface CustomObj<T = any> {
 export interface IResMsg {
 	(
 		message: string,
-		data: CustomObj,
+		data: CustomObj | null,
 		res: Response,
 		statusCode: number,
 		status?: string
@@ -17,7 +17,7 @@ export interface IResMsg {
 
 const resMsg = (
 	message: string,
-	data: CustomObj,
+	data: CustomObj | null,
 	res: Response,
 	statusCode = 200,
 	status:string = 'successful'

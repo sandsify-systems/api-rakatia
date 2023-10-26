@@ -36,8 +36,23 @@ export const signInValidation = [
 	// 	.isString()
 	// 	.withMessage('phoneNumber should be a string'),
 	check('password').isString().notEmpty().withMessage('password is required'),
-]
+];
+
 export const verifyValidation = [
 	check('userId').isString().notEmpty().withMessage('user id is required').withMessage('user id must be a string'),
 	check('code').isString().notEmpty().withMessage('verification code is required'),
-]
+];
+
+export const resetPassword = [
+	check('email')
+		.isEmail()
+		.withMessage('email is not a valid email')
+		.notEmpty()
+		.withMessage('email is required'),
+];
+
+export const updatePassword = [
+	check('userId').isString().notEmpty().withMessage('user id is required').withMessage('user id must be a string'),
+	check('code').isString().notEmpty().withMessage('verification code is required'),
+	check('newPassword').isString().notEmpty().withMessage('verification code is required'),
+];

@@ -39,6 +39,30 @@ const verifyAccountBody = {
   }
 };
 
+const updatePasswordRequestBody = {
+  userId: {
+    type: 'string',
+  },
+  code: {
+    type: 'string',
+  },
+  newPassword: {
+    type: 'string',
+  },
+}
+
+const responseProperties = {
+  status: {
+    type: 'string'
+  },
+  message: {
+    type: 'string'
+  },
+  data: {
+    type: 'string'
+  }
+};
+
 export const signUpApiDoc = {
   post: {
     description: 'Creates a new user account',
@@ -71,21 +95,13 @@ export const signUpApiDoc = {
     },
     responses: {
       '200': {
-        description: 'Response example',
+        description: 'Singup API Success Response Example',
         content: {
           'application/json': {
             schema: {
               type: 'object',
               properties: {
-                status: {
-                  type: 'string'
-                },
-                message: {
-                  type: 'string'
-                },
-                data: {
-                  type: 'string'
-                }
+                ...responseProperties
               },
             },
             example: {
@@ -110,24 +126,16 @@ export const signUpApiDoc = {
         },
       },
       '422': {
-        description: 'Unprocessable Entity (validation error)',
+        description: 'Signup API Error Response Example',
         content: {
           'application/json': {
             schema: {
               type: 'object',
               properties: {
-                status: {
-                  type: 'string'
-                },
                 statusCode: {
                   type: 'number'
                 },
-                message: {
-                  type: 'string'
-                },
-                data: {
-                  type: 'string'
-                }
+                ...responseProperties
               },
             },
             example: {
@@ -163,15 +171,13 @@ export const signInApiDoc = {
     },
     responses: {
       '200': {
-        description: 'Response example',
+        description: 'Signin API Success Response Example',
         content: {
           'application/json': {
             schema: {
               type: 'object',
               properties: {
-                token: {
-                  type: 'string'
-                }
+                ...responseProperties
               },
             },
             example: {
@@ -185,24 +191,16 @@ export const signInApiDoc = {
         },
       },
       '404': {
-        description: 'Invalid login credentials',
+        description: 'Singin API Error Response Example',
         content: {
           'application/json': {
             schema: {
               type: 'object',
               properties: {
-                status: {
-                  type: 'string'
-                },
                 statusCode: {
                   type: 'number'
                 },
-                message: {
-                  type: 'string'
-                },
-                data: {
-                  type: 'string'
-                }
+                ...responseProperties
               },
             },
             example: {
@@ -238,15 +236,13 @@ export const verifyAccount = {
     },
     responses: {
       '200': {
-        description: 'Response example',
+        description: 'Verify Account API Success Response Example',
         content: {
           'application/json': {
             schema: {
               type: 'object',
               properties: {
-                userId: {
-                  type: 'string'
-                }
+                ...responseProperties
               },
             },
             example: {
@@ -260,30 +256,150 @@ export const verifyAccount = {
         },
       },
       '404': {
-        description: 'The verification code provided is not valid',
+        description: 'Verify Account API Error Response Example',
         content: {
           'application/json': {
             schema: {
               type: 'object',
               properties: {
-                status: {
-                  type: 'string'
-                },
                 statusCode: {
                   type: 'number'
                 },
-                message: {
-                  type: 'string'
+                ...responseProperties
+              },
+              example: {
+                status: 'error',
+                statusCode: 404,
+                message: 'The verification code provided is not valid.',
+                data: null
+              },
+            },
+          },
+        },
+        ...errorResponsesDoc(),
+      },
+    },
+  }
+}
+
+export const resetPassword = {
+  post: {
+    description: 'Reset password',
+    requestBody: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            required: ['email'],
+            properties: {
+              email: {
+                type: 'string',
+              }
+            },
+          },
+        },
+      },
+    },
+    responses: {
+      '200': {
+        description: 'Reset password API Success Response Example',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                ...responseProperties
+              },
+            },
+            example: {
+              status: 'success',
+              message: 'Password reset link has been sent to your email',
+              data: null
+            },
+          },
+        },
+      },
+      '404': {
+        description: 'Resest Password API Error Response Example',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                statusCode: {
+                  type: 'number'
                 },
-                data: {
-                  type: 'string'
-                }
+                ...responseProperties
               },
             },
             example: {
               status: 'error',
               statusCode: 404,
-              message: 'The verification code provided is not valid.',
+              message: `User not found. There's no account associated with the email Please proceed to the registration page to create a new account.`,
+              data: null
+            },
+          },
+        },
+      },
+      ...errorResponsesDoc(),
+    },
+  },
+}
+
+export const updatePassword = {
+  post: {
+    description: 'Update password',
+    requestBody: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            required: ['email'],
+            properties: {
+              ...updatePasswordRequestBody
+            },
+          },
+        },
+      },
+    },
+    responses: {
+      '200': {
+        description: 'Update Password API Success Response Example',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                ...responseProperties
+              },
+            },
+            example: {
+              status: 'success',
+              message: 'Password updated successfully',
+              data: null
+            },
+          },
+        },
+      },
+      '404': {
+        description: 'Update Password API Error Response Example',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                statusCode: {
+                  type: 'number'
+                },
+                ...responseProperties
+              },
+            },
+            example: {
+              status: 'error',
+              statusCode: 404,
+              message: `Invalid password reset code`,
               data: null
             },
           },

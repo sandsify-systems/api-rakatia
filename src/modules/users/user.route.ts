@@ -2,7 +2,9 @@ import { Router, Request, Response, NextFunction } from 'express';
 import {
     signUpValidation,
     signInValidation,
-    verifyValidation
+    verifyValidation,
+    resetPassword,
+    updatePassword
 } from '../../core/validation/auth.validation';
 import { validateRequest } from '../../core/validation/index';
 import UserController from './user.controller';
@@ -44,6 +46,26 @@ users.post(
     verifyValidation,
     validateRequest,
     (req: Request, res: Response, next: NextFunction) => userController.verifyAccount(req, res, next)
+);
+
+/**
+ * Reset Password API route
+ */
+users.post(
+    '/reset-password',
+    resetPassword,
+    validateRequest,
+    (req: Request, res: Response, next: NextFunction) => userController.resetPassword(req, res, next)
+);
+
+/**
+ * Update Password API route
+ */
+users.post(
+    '/update-password',
+    updatePassword,
+    validateRequest,
+    (req: Request, res: Response, next: NextFunction) => userController.updatePassword(req, res, next)
 );
 
 export default users;

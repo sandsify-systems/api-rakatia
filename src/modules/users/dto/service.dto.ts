@@ -6,13 +6,17 @@ import { UploadApiResponse } from "cloudinary"
 export interface IUserService {
 	signUp(data: IUserSignUp, imageFile: FileArray): Promise<userSubset>
 	signIn(data: IUserSignIn): Promise<IAccessToken>
-	verifyAccount(data: IVerifyAccount): Promise<{}>
+	verifyAccount(data: IVerifyAccount): Promise<{ userId: string }>
+	resetPassword(data: IUserEmail): Promise<void>
+	updatePassword(data: IUpdatePassword): Promise<void>
 }
 
 export interface IUserController {
 	signUp(req: Request, res: Response, next: NextFunction): void
 	signIn(req: Request, res: Response, next: NextFunction): void
 	verifyAccount(req: Request, res: Response, next: NextFunction): void
+	updatePassword(req: Request, res: Response, next: NextFunction): void
+	resetPassword(req: Request, res: Response, next: NextFunction): void
 }
 
 export interface IUserHelper {
@@ -23,14 +27,16 @@ export interface IUserHelper {
 	extractCodeExpiry(code: string): string
 	extractCode(code: string): string
 	isCodeExpired(codeExpiryDate: string): boolean
-	doesUserExist(user: IUser | null, email: string): void
+	userExist(email: string): void
+	userDoesNotExist(userProperty: string): void
 	createShortId(): string
 	createVerificationUrl(userId: string, code: string, path: string): Promise<string>
 	getUserSubset(user: IUser): userSubset
-	sendVerificationLink(user: IUser): void
+	sendVerificationLink(user: IUser, subject: string): void
 	handleError(err: any): void
 	uploadProfileImage(upload: FileArray): Promise<UploadApiResponse>
-	updateUser(params:Dictionary, data: userSubset): void
+	updateUser(params: Dictionary, data: userSubset): void
+	sendNoTification(reciever: string, subject: string, template: string): Promise<void>
 }
 
 export interface IUserSignUp {
@@ -69,6 +75,20 @@ export interface IVerifyAccount {
 	code: string
 }
 
-export interface Dictionary<T=any> {
-	[key:string]:T
+export interface IUserId {
+	userId: string
+}
+
+export interface IUserEmail {
+	email: string
+}
+
+export interface IUpdatePassword {
+	userId: string,
+	code: string
+	newPassword: string
+}
+
+export interface Dictionary<T = any> {
+	[key: string]: T
 }

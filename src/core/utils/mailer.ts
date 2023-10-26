@@ -2,10 +2,10 @@ import * as nodemailer from 'nodemailer';
 import { log } from './logger';
 
 export interface MailOptions {
-  from: string;
+  from?: string;
   to: string;
   subject: string;
-  text: string;
+  text?: string;
   html: string
 }
 
@@ -24,19 +24,19 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export const sendEmail = async (receiverEmail: string, htmlTmeplate: string) => {
+export const sendEmail = async (data: MailOptions) => {
   const mailOptions: MailOptions = {
     from: 'jidsfotech@gmail.com', //NODEMAILER_SENDER as string,
-    to: receiverEmail,
-    subject: 'Verify Account',
-    text: 'Verify your email to complete signup process',
-    html: htmlTmeplate
+    to: data.to,
+    subject: data.subject,
+    text: data.text || '',
+    html: data.html
   };
   try {
     await transporter.sendMail(mailOptions);
-    log.info(`Email sent to:- ${receiverEmail} sucessfully`);
+    log.info(`Email sent to:- ${data.to} sucessfully`);
   } catch (E) {
-    log.error(`Error occured while sending to:- ${receiverEmail}`);
+    log.error(`Error occured while sending to:- ${data.to}`);
     log.error(E);
   }
 };
