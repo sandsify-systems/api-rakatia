@@ -2,7 +2,9 @@ import swaggerJSDoc from 'swagger-jsdoc';
 import {
     signUpApiDoc,
     signInApiDoc,
-    verifyAccount
+    verifyAccount,
+    resetPassword,
+    updatePassword
 } from '../../modules/users/doc/user.doc';
 
 const swaggerDefinition = swaggerJSDoc({
@@ -17,6 +19,8 @@ const swaggerDefinition = swaggerJSDoc({
             '/users/signup': { ...signUpApiDoc },
             '/users/signin': { ...signInApiDoc },
             '/users/verify': { ...verifyAccount },
+            '/users/reset-password': { ...resetPassword },
+            '/users/update-password': { ...updatePassword },
         },
     },
     basePath: '/',

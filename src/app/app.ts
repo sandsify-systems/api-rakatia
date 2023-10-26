@@ -1,7 +1,7 @@
 import { config } from 'dotenv';
 config();
 import 'reflect-metadata';
-import express, { type Application, Request, Response, NextFunction } from 'express';
+import express, { type Application} from 'express';
 import { handleErrors } from '../core/utils';
 import router from './routes';
 import fileupload from 'express-fileupload';
@@ -30,13 +30,13 @@ app.use('/rakatia-api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDefinition)
 app.use(handleErrors);
 
 // Return a global message for any unregistered routes
-app.all('*', (req:Request, res:Response, next:NextFunction)=> {
-  log.info(`Resource not found`);
-  return res.send({
-    status: 'resource not found',
-    code: 400
-  });
-});
+// app.all('*', (req:Request, res:Response, next:NextFunction)=> {
+//   log.info(`Resource not found`);
+//   return res.send({
+//     status: 'resource not found',
+//     code: 400
+//   });
+// });
 
 // Handle any internal unhandle exception
 process.on('unhandledRejection', (reason, promise) => {

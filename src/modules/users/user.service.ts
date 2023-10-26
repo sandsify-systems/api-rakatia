@@ -5,13 +5,14 @@ import {
 	IUserSignIn,
 	IAccessToken,
 	IVerifyAccount,
+	IUserEmail,
+	IUpdatePassword,
 } from './dto/service.dto';
 import { Exception } from '../../core/utils';
 import { FileArray } from 'express-fileupload';
 import { RoleModelType } from '../../core/database/models/user/role.model';
 import { UserModelType } from '../../core/database/models/user/user.model';
 import UserHelper from './helper';
-import { sendEmail } from '../../core/utils/mailer';
 
 export default class UserService extends UserHelper implements IUserService {
 
@@ -31,7 +32,7 @@ export default class UserService extends UserHelper implements IUserService {
 			let user = await this.user.findOne({ email: email });
 
 			//check if user with the provided email already exist
-			this.doesUserExist(user, email);
+			if (user) { throw this.userExist(email) };
 
 			// default user role to staff if role type not present in request payload
 			const userRole = roleType ? await this.role.findOne({ name: roleType }) :
@@ -49,7 +50,7 @@ export default class UserService extends UserHelper implements IUserService {
 			const $user = await new this.user(userData).save();
 
 			// send user email verification
-			this.sendVerificationLink($user);
+			this.sendVerificationLink($user, 'Verify account');
 
 			return this.getUserSubset($user);
 		} catch (err: any) {
@@ -68,20 +69,17 @@ export default class UserService extends UserHelper implements IUserService {
 			const user = await this.user.findOne({ email: email });
 
 			if (!user) {
-				throw new Exception(
-					'User not found. There is no account associated with this email. Please proceed to the registration page to create a new account.',
-					404
-				);
+				throw this.userDoesNotExist(email);
 			}
 
-			// Non verified user tries to signin throw error and resend new verification link
-			// if (user && !user.isVerified) {
-			// 	this.sendVerificationLink(user);
-			// 	throw new Exception(
-			// 		'The account associated with this email is not verified. Please check your email for a new verification link',
-			// 		404
-			// 	)
-			// } 
+			// If non verified user try to signin throw error and resend new verification link
+			if (user && !user.isVerified) {
+				this.sendVerificationLink(user, 'Verify account');
+				throw new Exception(
+					'The account associated with this email is not verified. Please check your email for a new verification link',
+					404
+				)
+			} 
 
 			await this.comparePassword(password, user.password);
 			const accessToken = this.generateAccessToken(this.getUserSubset(user));
@@ -94,15 +92,15 @@ export default class UserService extends UserHelper implements IUserService {
 	/**
 	* verify user account service
 	* @param data
-	* @returns Boolean
+	* @returns userId
 	*/
-	public async verifyAccount(data: IVerifyAccount): Promise<{userId:string}> {
+	public async verifyAccount(data: IVerifyAccount): Promise<{ userId: string }> {
 		try {
 			let { userId, code } = data;
-			const user = await this.user.findOne({ id: userId });
+			const user = await this.user.findOne({ _id: userId });
 
 			if (!user) {
-				throw new Exception(`There's no user account associated with the provided user_id:- ${userId}`, 404);
+				throw this.userDoesNotExist(userId);
 			}
 
 			if (user.isVerified) {
@@ -113,7 +111,7 @@ export default class UserService extends UserHelper implements IUserService {
 			const codeExpiryDate: string = this.extractCodeExpiry(user.code);
 			if (this.isCodeExpired(codeExpiryDate)) {
 				// Resend verification link
-				this.sendVerificationLink(user);
+				this.sendVerificationLink(user, 'Verify account');
 				throw new Exception('verification link has expired please check your email for a new link', 404);
 			}
 
@@ -125,11 +123,67 @@ export default class UserService extends UserHelper implements IUserService {
 			await this.updateUser({ _id: userId }, { isVerified: true });
 
 			// Send welcome email to user after successful account verification
-			const {APP_URL} = process.env;
+			const { APP_URL } = process.env;
 			let testTemaplate = `<div><a href=${APP_URL}/login>Account averified please proceed to login</a></div>`;
-			await sendEmail(user.email, testTemaplate);
+			await this.sendNoTification(user.email, 'Welcome to rakatia', testTemaplate);
 
-			return {userId:userId};
+			return { userId: user._id };
+		} catch (err) {
+			throw this.handleError(err);
+		}
+	}
+
+	/**
+	 * reset  password service
+	 *  @param email
+	 * @returns
+	*/
+	public async resetPassword(data: IUserEmail): Promise<void> {
+		try {
+			const { email } = data;
+			const user = await this.user.findOne({ email: email });
+
+			if (!user) {
+				throw this.userDoesNotExist(email);
+			}
+
+			// send reset code
+			this.sendVerificationLink(user, 'Reset password');
+		} catch (err) {
+			throw this.handleError(err);
+		}
+	}
+
+	/**
+	 * update password service
+	 * @param data
+	 * @returns 
+	 */
+	public async updatePassword(data: IUpdatePassword): Promise<void> {
+		try {
+			let { userId, code, newPassword } = data;
+			const user = await this.user.findOne({ _id: userId });
+
+			if (!user) {
+				throw this.userDoesNotExist(userId);
+			}
+
+			const verificationCode: string = this.extractCode(user.code);
+			const codeExpiryDate: string = this.extractCodeExpiry(user.code);
+			if (this.isCodeExpired(codeExpiryDate)) {
+				// Resend passsword reset link
+				this.sendVerificationLink(user, 'Reset password');
+				throw new Exception('Link expired, a new password reset link has been sent to your email', 404);
+			}
+
+			// Compare the provided code with the user code
+			if (code !== verificationCode) {
+				throw new Exception('Invalid password reset code', 404);
+			}
+			// updated user status to verified
+			newPassword = await this.hashPassword(newPassword);
+			await this.updateUser({ _id: userId }, { password: newPassword });
+
 		} catch (err) {
 			throw this.handleError(err);
 		}

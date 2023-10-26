@@ -79,8 +79,8 @@ class CloudinaryClient implements ICloudinary {
     const validateImage = /(\.jpg|\.jpeg|\.png|\.gif|\.pdf)$/i;
     const fileSizeLimit: number = 5 * 1024 * 1024; //5mb in bytes
     if (!validateImage.exec(extention)) {
-      log.error({ Error: 'Invalid file format, must be image or pdf formart' });
-      throw new Exception('Invalid file format, must be image or pdf formart', 402);
+      log.error({ Error: 'Invalid file format, must be image' });
+      throw new Exception('Invalid file format, must be image', 402);
     }
     if (fileSize > fileSizeLimit) {
       throw new Exception('File size exceeds 5mb limit', 402);

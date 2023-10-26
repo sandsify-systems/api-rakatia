@@ -68,10 +68,15 @@ export default class UserHelper implements IUserHelper {
 		return moment(codeExpiryDate).isBefore(currentTime);
 	};
 
-	doesUserExist(user: IUser | null, email: string): void {
-		if (user) {
-			throw new Exception(`User with email: ${email} already exist`, 422);
-		}
+	userExist(userProperty: string): void {
+		throw new Exception(`User with property: ${userProperty} already exist`, 422);
+	}
+
+	userDoesNotExist(userProperty: string): void {
+		throw new Exception(
+			`User not found. There's no account associated with this cred:${userProperty}. Please proceed to the registration page to create a new account.`,
+			404
+		);
 	}
 
 	createShortId(): string {
@@ -89,7 +94,6 @@ export default class UserHelper implements IUserHelper {
 		if (this.isCodeExpired(codeExpiryDate)) {
 			verificationCode = this.createCode();
 			await this.updateUser({ _id: userId }, { code: verificationCode })
-			// await this.user.updateOne({ _id: userId }, { code: verificationCode });
 		} else {
 			verificationCode = code;
 		}
@@ -111,12 +115,12 @@ export default class UserHelper implements IUserHelper {
 		return pick;
 	}
 
-	async sendVerificationLink(user: IUser): Promise<void> {
+	async sendVerificationLink(user: IUser, subject: string): Promise<void> {
 		// send user email verification
 		const { _id, code, email } = user;
 		let link = await this.createVerificationUrl(_id, code, 'verify');
-		let testTemaplate = `<div><a href=${link}>verify account</a></div>`;
-		await sendEmail(email, testTemaplate);
+		let testTemaplate = `<div><a href=${link}>${subject}</a></div>`;
+		await this.sendNoTification(email, subject, testTemaplate);
 	}
 
 	handleError(err: any): void {
@@ -135,16 +139,25 @@ export default class UserHelper implements IUserHelper {
 
 		const uploadPth: string = path.join(__dirname, `../../../uploads/${profileImage.name}`);
 
-		// move uploaded file from temp memory storage to "files dir"
+		// move uploaded file from temp memory storage to "uploads dir"
 		await profileImage.mv(uploadPth);
 		const imageUploadRes: UploadApiResponse = await this.cloudinaryClient.upload(uploadPth);
 
-		// delete the uploaded image from the codebase after successful upload to cloudinary
+		// delete the uploaded image from the "uploads dir" after successful upload to cloudinary
 		this.cloudinaryClient.deleteTempUploads(uploadPth);
 		return imageUploadRes;
 	}
 
 	async updateUser(params: Dictionary, data: Dictionary): Promise<void> {
 		await this.user.updateOne(params, data);
+	}
+
+	async sendNoTification(reciever: string, subject: string, template: string): Promise<void> {
+		const data = {
+			to: reciever,
+			subject: subject,
+			html: template
+		}
+		await sendEmail(data);
 	}
 }

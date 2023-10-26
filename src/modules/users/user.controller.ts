@@ -26,19 +26,37 @@ export default class UserController implements IUserController {
 
 	async signIn(req: Request, res: Response, next: NextFunction):Promise<void>{
 		try {
-			const data = await this.userService.signIn(req.body)
-			this.resMsg('User signin successful', data, res, 200)
+			const data = await this.userService.signIn(req.body);
+			this.resMsg('User signin successful', data, res, 200);
 		} catch (error) {
-			next(error)
+			next(error);
 		}
 	}
 
 	async verifyAccount(req: Request, res: Response, next: NextFunction):Promise<void>{
 		try {
-			const data = await this.userService.verifyAccount(req.body)
-			this.resMsg('User verification successful', data, res, 200)
+			const data = await this.userService.verifyAccount(req.body);
+			this.resMsg('User verification successful', data, res, 200);
 		} catch (error) {
-			next(error)
+			next(error);
+		}
+	}
+
+	async resetPassword(req: Request, res: Response, next: NextFunction):Promise<void>{
+		try {
+			await this.userService.resetPassword(req.body);
+			this.resMsg('Password reset link has been sent to your email', null, res, 200);
+		} catch (error) {
+			next(error);
+		}
+	}
+
+	async updatePassword(req: Request, res: Response, next: NextFunction):Promise<void>{
+		try {
+			await this.userService.updatePassword(req.body);
+			this.resMsg('Password updated successfully', null, res, 200);
+		} catch (error) {
+			next(error);
 		}
 	}
 }
