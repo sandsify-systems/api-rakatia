@@ -26,7 +26,7 @@ const transporter = nodemailer.createTransport({
 
 export const sendEmail = async (data: MailOptions): Promise<void> => {
   const mailOptions: MailOptions = {
-    from: 'jidsfotech@gmail.com', //NODEMAILER_SENDER as string,
+    from: NODEMAILER_SENDER as string,
     to: data.to,
     subject: data.subject,
     text: data.text || '',
