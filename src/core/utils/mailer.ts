@@ -11,9 +11,8 @@ export interface MailOptions {
 
 const {
   NODEMAILER_SERVICE,
-  // NODEMAILER_USER,
   NODEMAILER_PASSWORD,
-  // NODEMAILER_SENDER
+  NODEMAILER_SENDER
 } = process.env;
 
 const transporter = nodemailer.createTransport({
@@ -26,7 +25,7 @@ const transporter = nodemailer.createTransport({
 
 export const sendEmail = async (data: MailOptions): Promise<void> => {
   const mailOptions: MailOptions = {
-    from: 'jidsfotech@gmail.com', //NODEMAILER_SENDER as string,
+    from: NODEMAILER_SENDER as string,
     to: data.to,
     subject: data.subject,
     text: data.text || '',
