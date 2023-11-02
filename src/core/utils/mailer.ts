@@ -11,9 +11,8 @@ export interface MailOptions {
 
 const {
   NODEMAILER_SERVICE,
-  // NODEMAILER_USER,
   NODEMAILER_PASSWORD,
-  // NODEMAILER_SENDER
+  NODEMAILER_SENDER
 } = process.env;
 
 const transporter = nodemailer.createTransport({
