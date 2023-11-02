@@ -1,35 +1,24 @@
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { Exception, log } from '../../../core/utils';
-import moment from 'moment';
-import * as shortid from 'shortid';
+import { Exception } from '../../../core/utils';
 import { IUser } from '../../../core/database/models/user/user.model';
 import {
 	userSubset,
 	IAccessToken,
 	IUserHelper,
 	Dictionary
-} from '../dto/service.dto';
+} from '../dto/user.dto';
 import _ from 'lodash';
 import { UserModelType } from "../../../core/database/models/user/user.model";
-import { RoleModelType } from "../../../core/database/models/user/role.model";
-import { sendEmail } from '../../../core/utils/mailer';
-import { FileArray, UploadedFile } from 'express-fileupload';
-import { UploadApiResponse } from 'cloudinary';
-import CloudinaryClient from '../../../core/cloudinary/cloudinary';
-import { ICloudinary } from '../../../core/cloudinary/cloudinary.types';
-import path from 'path';
+import CommonHelper from '../../common';
+import { CompanyModelType } from '../../../core/database/models/company/company.model';
 
-export default class UserHelper implements IUserHelper {
-	cloudinaryClient: ICloudinary
+export default class UserHelper extends CommonHelper implements IUserHelper {
 
-	constructor(
-		protected user: UserModelType,
-		protected role: RoleModelType,
-	) {
+	constructor(protected user: UserModelType, protected company: CompanyModelType) {
+		super();
 		this.user = user;
-		this.role = role;
-		this.cloudinaryClient = new CloudinaryClient()
+		this.company = company;
 	}
 
 	async hashPassword(password: string): Promise<string> {
@@ -53,21 +42,6 @@ export default class UserHelper implements IUserHelper {
 		return { token: token };
 	}
 
-	createCode(): string {
-		const code: string = shortid.generate().replace('_', '');
-		const expiry = moment(new Date(), "YYYY-MM-DD HH:mm:ss").add(1, 'month').format("YYYY-MM-DD HH:mm:ss");
-		return `${code}|${expiry}`;
-	};
-
-	extractCode(code: string): string { return code.split('|')[0]; };
-
-	extractCodeExpiry(code: string): string { return code.split('|')[1] };
-
-	isCodeExpired(codeExpiryDate: string): boolean {
-		const currentTime = moment(new Date(), "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss");
-		return moment(codeExpiryDate).isBefore(currentTime);
-	};
-
 	userExist(userProperty: string): void {
 		throw new Exception(`User with property: ${userProperty} already exist`, 422);
 	}
@@ -79,85 +53,19 @@ export default class UserHelper implements IUserHelper {
 		);
 	}
 
-	createShortId(): string {
-		let id = shortid.generate();
-		return id.replace('-', '');
-	}
-
-	async createVerificationUrl(userId: string, code: string, path: string): Promise<string> {
-		/**
-		 * check if the current code has expired before attaching to link
-		 * If code has expired create a new one and update user data
-		*/
-		let verificationCode;
-		let codeExpiryDate = this.extractCodeExpiry(code)
-		if (this.isCodeExpired(codeExpiryDate)) {
-			verificationCode = this.createCode();
-			await this.updateUser({ _id: userId }, { code: verificationCode })
-		} else {
-			verificationCode = code;
-		}
-		const app_url = process.env.APP_URL
-		return `${app_url}/${path}/${userId}_${this.createShortId()}_${this.extractCode(verificationCode)}_${this.createShortId()}`;
-	}
-
 	getUserSubset(user: IUser): userSubset {
 		const pick = _.pick(user, [
-			'firstName',
-			'lastName',
+			'name',
 			'email',
 			'phoneNumber',
 			'imageUrl',
 			'imagePublicId',
-			'role',
 			'_id'
 		]);
 		return pick;
 	}
 
-	async sendVerificationLink(user: IUser, subject: string): Promise<void> {
-		// send user email verification
-		const { _id, code, email } = user;
-		let link = await this.createVerificationUrl(_id, code, 'verify');
-		let testTemaplate = `<div><a href=${link}>${subject}</a></div>`;
-		await this.sendNoTification(email, subject, testTemaplate);
-	}
-
-	handleError(err: any): void {
-		log.error(err);
-		const message = err.message ? err.message : 'Internal server error';
-		const status = err.status ? err.status : 500;
-		throw new Exception(message, status);
-	}
-
-	// Upload image to cloudinary
-	async uploadProfileImage(upload: FileArray): Promise<UploadApiResponse> {
-		const profileImage = <UploadedFile>upload.profileImage;
-		const ext: string = path.extname(profileImage.name);
-		// validate uploaded file
-		this.cloudinaryClient.validateImage(ext, profileImage.size);
-
-		const uploadPth: string = path.join(__dirname, `../../../uploads/${profileImage.name}`);
-
-		// move uploaded file from temp memory storage to "uploads dir"
-		await profileImage.mv(uploadPth);
-		const imageUploadRes: UploadApiResponse = await this.cloudinaryClient.upload(uploadPth);
-
-		// delete the uploaded image from the "uploads dir" after successful upload to cloudinary
-		this.cloudinaryClient.deleteTempUploads(uploadPth);
-		return imageUploadRes;
-	}
-
 	async updateUser(params: Dictionary, data: Dictionary): Promise<void> {
 		await this.user.updateOne(params, data);
-	}
-
-	async sendNoTification(reciever: string, subject: string, template: string): Promise<void> {
-		const data = {
-			to: reciever,
-			subject: subject,
-			html: template
-		}
-		await sendEmail(data);
 	}
 }

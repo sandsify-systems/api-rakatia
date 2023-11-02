@@ -23,11 +23,11 @@ class CloudinaryClient implements ICloudinary {
    * @param filePath
    * @returns UploadApiResponse
    */
-  async upload(filePath: string): Promise<UploadApiResponse> {
+  async upload(filePath: string, cloudinaryFolder:string): Promise<UploadApiResponse> {
     log.info('::: file upload in progress...');
     try {
       const options: ICloudinaryOptions = {
-        folder: 'profile_images',
+        folder: cloudinaryFolder,
         use_filename: true,
       };
       const response: UploadApiResponse = await cloudinary.uploader.upload(filePath, options);

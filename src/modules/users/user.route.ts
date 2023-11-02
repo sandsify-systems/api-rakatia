@@ -9,11 +9,11 @@ import {
 import { validateRequest } from '../../core/validation/index';
 import UserController from './user.controller';
 import User from '../../core/database/models/user/user.model';
-import Role from '../../core/database/models/user/role.model';
+import Company from '../../core/database/models/company/company.model';
 import UserService from './user.service';
 import resMsg from '../../core/utils/response';
 
-const userService = new UserService(User, Role);
+const userService = new UserService(User, Company);
 const userController = new UserController(userService, resMsg);
 
 export const users = Router();

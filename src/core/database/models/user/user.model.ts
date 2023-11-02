@@ -4,8 +4,7 @@ import shortid from 'shortid';
 import moment from 'moment';
 
 export interface IUser extends Document {
-    firstName: string
-    lastName: string
+    name: string
     email: string
     password: string
     phoneNumber: string
@@ -15,12 +14,12 @@ export interface IUser extends Document {
     lockUntil: number
     imageUrl?: string
     imagePublicId?: string
-    loginDevice: string,
+    loginDevice: string
     reference: string
-    role:Types.ObjectId
+    roles: [{ role: string, company: Types.ObjectId }]
 }
 
-export const UserSchema:Schema = new Schema<IUser>({
+export const UserSchema: Schema = new Schema<IUser>({
     email: {
         type: String,
         required: [true, 'please provide a valid email address'],
@@ -30,13 +29,9 @@ export const UserSchema:Schema = new Schema<IUser>({
         type: String,
         required: true
     },
-    firstName: {
+    name: {
         type: String,
-        required: true
-    },
-    lastName: {
-        type: String,
-        required: true
+        required: false
     },
     phoneNumber: {
         type: String,
@@ -77,10 +72,14 @@ export const UserSchema:Schema = new Schema<IUser>({
         required: false,
         type: Number
     },
-    role: {
-        type: Schema.Types.ObjectId,
-        ref:'Role'
-    }
+    roles: [{
+        role: {
+            type: String,
+            enum: ['user', 'staff', 'admin', 'super-admin', 'manager'],
+            default: 'user'
+        },
+        company: { type: Schema.Types.ObjectId, ref: 'Company' },
+    }]
 });
 
 UserSchema.pre<IUser>('validate', async function (next: any) {

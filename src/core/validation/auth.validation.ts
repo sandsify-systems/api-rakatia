@@ -16,13 +16,14 @@ export const signUpValidation = [
 	check('phoneNumber')
 		.isString()
 		.notEmpty()
+		.withMessage('phoneNumber is required')
 		.isLength({ min: 11, max: 14 })
-		.withMessage('phoneNumber is required and must not be less than 11 or greater than 14 char'),
-	check('roleType')
-		.isString()
-		.optional()
-		.isIn(['staff', 'admin', 'manager'])
-		.withMessage('role must be one of "staff","admin","manager"')
+		.withMessage('phone number must be min of 11 or max of 14 didgits'),
+	// check('roleType')
+	// 	.isString()
+	// 	.optional()
+	// 	.isIn(['staff', 'admin', 'manager'])
+	// 	.withMessage('role must be one of "staff","admin","manager"')
 ];
 
 export const signInValidation = [
