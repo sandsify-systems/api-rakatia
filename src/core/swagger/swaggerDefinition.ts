@@ -6,6 +6,7 @@ import {
     resetPassword,
     updatePassword
 } from '../../modules/users/doc/user.doc';
+import { companySignUpApiDoc } from '../../modules/company/doc/company.doc';
 
 const swaggerDefinition = swaggerJSDoc({
     swaggerDefinition: {
@@ -21,6 +22,7 @@ const swaggerDefinition = swaggerJSDoc({
             '/users/verify': { ...verifyAccount },
             '/users/reset-password': { ...resetPassword },
             '/users/update-password': { ...updatePassword },
+            '/company/signup': { ...companySignUpApiDoc }
         },
     },
     basePath: '/',

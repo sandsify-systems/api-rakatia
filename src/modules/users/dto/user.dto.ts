@@ -1,10 +1,9 @@
-import { FileArray } from "express-fileupload"
 import { IUser } from "../../../core/database/models/user/user.model"
 import { Request, Response, NextFunction } from "express"
-import { UploadApiResponse } from "cloudinary"
+import { IUpload } from "../../common/common.dto"
 
 export interface IUserService {
-	signUp(data: IUserSignUp, imageFile: FileArray): Promise<userSubset>
+	signUp(data: IUserSignUp): Promise<userSubset>
 	signIn(data: IUserSignIn): Promise<IAccessToken>
 	verifyAccount(data: IVerifyAccount): Promise<{ userId: string }>
 	resetPassword(data: IUserEmail): Promise<void>
@@ -23,20 +22,10 @@ export interface IUserHelper {
 	hashPassword(password: string): Promise<string>
 	comparePassword(password: string, hashedPassword: string): Promise<void>
 	generateAccessToken(data: userSubset): IAccessToken
-	createCode(): string
-	extractCodeExpiry(code: string): string
-	extractCode(code: string): string
-	isCodeExpired(codeExpiryDate: string): boolean
 	userExist(email: string): void
 	userDoesNotExist(userProperty: string): void
-	createShortId(): string
-	createVerificationUrl(userId: string, code: string, path: string): Promise<string>
 	getUserSubset(user: IUser): userSubset
-	sendVerificationLink(user: IUser, subject: string): void
-	handleError(err: any): void
-	uploadProfileImage(upload: FileArray): Promise<UploadApiResponse>
 	updateUser(params: Dictionary, data: userSubset): void
-	sendNoTification(reciever: string, subject: string, template: string): Promise<void>
 }
 
 export interface IUserSignUp {
@@ -45,7 +34,7 @@ export interface IUserSignUp {
 	email: string
 	password: string
 	phoneNumber: string
-	roleType: string
+	profileImage?: IUpload | null
 }
 
 export interface IUserSignIn {
@@ -56,13 +45,11 @@ export interface IUserSignIn {
 
 export type userSubset = Pick<
 	IUser,
-	'firstName' |
-	'lastName' |
+	'name' |
 	'email' |
 	'phoneNumber' |
 	'imageUrl' |
 	'imagePublicId' |
-	'role' |
 	'_id'
 >
 

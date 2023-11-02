@@ -15,9 +15,6 @@ const signUpRequestBody = {
   },
   phoneNumber: {
     type: 'string',
-  },
-  roleType: {
-    type: 'string',
   }
 };
 
@@ -114,11 +111,6 @@ export const signUpApiDoc = {
                 'phoneNumber': '+2341111111111',
                 'imageUrl': 'https://user_image_url',
                 'imagePublicId': 'user_image_id',
-                'role': {
-                  '_id': "652a9deb54f77f7814bfe99f",
-                  'name': 'staff',
-                  'permissions': ['read', 'write'],
-                },
                 '_id': '652a9deb54f77f7814bfe99f'
               }
             },
