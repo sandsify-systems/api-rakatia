@@ -1,6 +1,8 @@
-import { IUser } from "../../../core/database/models/user/user.model"
-import { Request, Response, NextFunction } from "express"
-import { IUpload } from "../../common/common.dto"
+import { IUser } from "../../../core/database/models/user/user.model";
+import { Request, Response, NextFunction } from "express";
+import { IUpload } from "../../common/common.dto";
+import { Types } from "mongoose";
+import { Iinvitations } from "../../../core/database/models/invitations/invitations.model";
 
 export interface IUserService {
 	signUp(data: IUserSignUp): Promise<userSubset>
@@ -22,19 +24,21 @@ export interface IUserHelper {
 	hashPassword(password: string): Promise<string>
 	comparePassword(password: string, hashedPassword: string): Promise<void>
 	generateAccessToken(data: userSubset): IAccessToken
-	userExist(email: string): void
-	userDoesNotExist(userProperty: string): void
+	userExist(message: string): void
+	userDoesNotExist(message: string): void
 	getUserSubset(user: IUser): userSubset
 	updateUser(params: Dictionary, data: userSubset): void
+	validateInvitation(params: Iinvitations): Iinvitations
 }
 
 export interface IUserSignUp {
-	firstName: string
-	lastName: string
+	firstName?: string
+	lastName?: string
 	email: string
 	password: string
-	phoneNumber: string
+	phoneNumber?: string
 	profileImage?: IUpload | null
+	invitationId?: string
 }
 
 export interface IUserSignIn {

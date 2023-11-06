@@ -1,8 +1,8 @@
 import { check } from 'express-validator';
 
 export const signUpValidation = [
-	check('firstName').isString().notEmpty().withMessage('firstName is required'),
-	check('lastName').isString().notEmpty().withMessage('lastName is required'),
+	check('firstName').isString().optional(),
+	check('lastName').isString().optional(),
 	check('email')
 		.isEmail()
 		.withMessage('email is not a valid email')
@@ -15,15 +15,12 @@ export const signUpValidation = [
 		.withMessage('password is required and minimum of 8 characters'),
 	check('phoneNumber')
 		.isString()
-		.notEmpty()
-		.withMessage('phoneNumber is required')
 		.isLength({ min: 11, max: 14 })
-		.withMessage('phone number must be min of 11 or max of 14 didgits'),
-	// check('roleType')
-	// 	.isString()
-	// 	.optional()
-	// 	.isIn(['staff', 'admin', 'manager'])
-	// 	.withMessage('role must be one of "staff","admin","manager"')
+		.withMessage('phone number must be min of 11 or max of 14 didgits')
+		.optional(),
+	check('invitationId')
+		.isString()
+		.optional()
 ];
 
 export const signInValidation = [

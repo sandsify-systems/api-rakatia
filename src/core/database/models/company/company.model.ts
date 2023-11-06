@@ -2,34 +2,37 @@ import { Schema, model, Document, Types } from 'mongoose';
 import shortid from 'shortid';
 
 export interface ICompany extends Document {
+    ownersId: Types.ObjectId
     name: string
-    email: string
-    phoneNumber: string
-    address: string
+    email?: string
+    phoneNumber?: string
+    address?: string
     code: string
     logoUrl?: string
     logoPublicId?: string
     industry?: string,
     website?: string,
     reference: string,
-    staffs: [Types.ObjectId]
+    staffs: [{ staffId: Types.ObjectId, role: string }]
 }
 
 export const CompanySchema: Schema = new Schema<ICompany>({
-    email: {
-        type: String,
-        required: [true, 'please provide a valid email address'],
-        index: { unique: true }
+    ownersId: {
+        type: Schema.Types.ObjectId,
+        required: true,
     },
     name: {
         type: String,
         required: true,
         unique: true
     },
+    email: {
+        type: String,
+        required: false,
+    },
     phoneNumber: {
         type: String,
-        required: true,
-        unique: true
+        required: false,
     },
     logoUrl: {
         type: String,
@@ -44,8 +47,11 @@ export const CompanySchema: Schema = new Schema<ICompany>({
         required: true
     },
     staffs: [{
-        type: Types.ObjectId,
-        required: true
+        staffId: {
+            type: Schema.Types.ObjectId,
+            required: true
+        },
+        role: String
     }]
 });
 

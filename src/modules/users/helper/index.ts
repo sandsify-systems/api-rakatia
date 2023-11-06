@@ -6,12 +6,13 @@ import {
 	userSubset,
 	IAccessToken,
 	IUserHelper,
-	Dictionary
+	Dictionary,
 } from '../dto/user.dto';
 import _ from 'lodash';
 import { UserModelType } from "../../../core/database/models/user/user.model";
 import CommonHelper from '../../common';
 import { CompanyModelType } from '../../../core/database/models/company/company.model';
+import { Iinvitations } from '../../../core/database/models/invitations/invitations.model';
 
 export default class UserHelper extends CommonHelper implements IUserHelper {
 
@@ -42,15 +43,12 @@ export default class UserHelper extends CommonHelper implements IUserHelper {
 		return { token: token };
 	}
 
-	userExist(userProperty: string): void {
-		throw new Exception(`User with property: ${userProperty} already exist`, 422);
+	userExist(message: string): void {
+		throw new Exception(message, 422);
 	}
 
-	userDoesNotExist(userProperty: string): void {
-		throw new Exception(
-			`User not found. There's no account associated with this cred:${userProperty}. Please proceed to the registration page to create a new account.`,
-			404
-		);
+	userDoesNotExist(message: string): void {
+		throw new Exception(message, 404);
 	}
 
 	getUserSubset(user: IUser): userSubset {
@@ -67,5 +65,25 @@ export default class UserHelper extends CommonHelper implements IUserHelper {
 
 	async updateUser(params: Dictionary, data: Dictionary): Promise<void> {
 		await this.user.updateOne(params, data);
+	}
+
+	validateInvitation(invite: Iinvitations | null): Iinvitations {
+
+		if (!invite) {
+			throw new Exception('Can not find the requested invitation', 402);
+		}
+		if (invite.invitationStatus === 'accepted') {
+			throw new Exception('Invitation already accepted please proceed to login', 402)
+		}
+		if (invite.invitationStatus === 'rejected') {
+			throw new Exception('Invitation already rejected please ask the sender to send a new invitation or proceed to signup page', 402)
+		}
+
+		// Note: we could also check for expired invitation by checking the code expiry
+		// if (this.isCodeExpired(invite.invitationCode)) {
+		// 	throw new Exception('Invalid invitation code', 402);
+		// }
+		const { sendersId, companyId, inviteeRoll } = invite;
+		return { sendersId: sendersId, companyId: companyId, inviteeRoll: inviteeRoll } as Iinvitations;
 	}
 }

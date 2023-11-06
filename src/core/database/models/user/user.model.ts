@@ -4,10 +4,10 @@ import shortid from 'shortid';
 import moment from 'moment';
 
 export interface IUser extends Document {
-    name: string
+    name?: string
     email: string
     password: string
-    phoneNumber: string
+    phoneNumber?: string
     code: string
     isVerified: boolean
     loginAttempts: number
@@ -35,7 +35,7 @@ export const UserSchema: Schema = new Schema<IUser>({
     },
     phoneNumber: {
         type: String,
-        required: true,
+        required: false,
         unique: true
     },
     imageUrl: {

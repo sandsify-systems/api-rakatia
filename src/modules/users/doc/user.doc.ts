@@ -15,6 +15,9 @@ const signUpRequestBody = {
   },
   phoneNumber: {
     type: 'string',
+  },
+  invitationId: {
+    type: 'string',
   }
 };
 
@@ -69,7 +72,7 @@ export const signUpApiDoc = {
         'application/json': {
           schema: {
             type: 'object',
-            required: ['firstName', 'lastName', 'email', 'password', 'phoneNumber'],
+            required: ['email', 'password',],
             properties: {
               ...signUpRequestBody
             },
@@ -78,7 +81,7 @@ export const signUpApiDoc = {
         'multipart/form-data': {
           schema: {
             type: 'object',
-            required: ['firstName', 'lastName', 'email', 'password', 'phoneNumber'],
+            required: ['email', 'password'],
             properties: {
               ...signUpRequestBody,
               profileImage: {
