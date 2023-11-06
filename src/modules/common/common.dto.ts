@@ -7,13 +7,13 @@ export interface ICommonHelper {
 	extractCodeExpiry(code: string): string
 	extractCode(code: string): string
 	isCodeExpired(codeExpiryDate: string): boolean
-	createVerificationUrl(user: IUser, code: string, path: string): Promise<string>
-	sendVerificationLink(user: IUser, subject: string): void
+	createTemplateUrl(db: any, path: string): Promise<string>
+	createEmailTemplate(templateData: Dictionary, template: string): Promise<string>
+	sendNoTification(notificationData: INotification): Promise<void>
 	createShortId(): string
 	handleError(err: any): void
 	getUploadedFile(upload: UploadedFile): Promise<IUpload>
 	uploadToCloudinary(upload: IUpload, cloudinaryFolder: string): Promise<UploadApiResponse>
-	sendNoTification(reciever: string, subject: string, template: string): Promise<void>
 }
 
 export interface Dictionary<T = any> {
@@ -23,4 +23,13 @@ export interface Dictionary<T = any> {
 export interface IUpload {
 	name: string;
 	size: number
+}
+
+export interface INotification {
+	db: any
+	reciever: string
+	subject: string
+	template: string
+	templateData: Dictionary
+	redirectPath?: string
 }

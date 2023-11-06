@@ -1,14 +1,15 @@
 import { ICloudinary } from '../../core/cloudinary/cloudinary.types';
 import CloudinaryClient from '../../core/cloudinary/cloudinary';
 import { UploadApiResponse } from 'cloudinary';
-import { ICommonHelper, IUpload } from './common.dto';
+import { Dictionary, ICommonHelper, INotification, IUpload } from './common.dto';
 import { UploadedFile } from 'express-fileupload';
 import { Exception, log } from '../../core/utils';
 import path from 'path';
-import { sendEmail } from '../../core/utils/mailer';
+import { MailOptions, sendEmail } from '../../core/notification/mailer';
 import moment from 'moment';
 import * as shortid from 'shortid';
 import { IUser } from '../../core/database/models/user/user.model';
+import { renderFile } from 'ejs';
 
 export default class CommonHelper implements ICommonHelper {
     cloudinaryClient: ICloudinary
@@ -34,30 +35,41 @@ export default class CommonHelper implements ICommonHelper {
         return moment(codeExpiryDate).isBefore(currentTime);
     };
 
-    async 	createVerificationUrl(user: IUser, code: string, path: string): Promise<string> {
+    async createTemplateUrl(db: any, redirectPath: string): Promise<string> {
         /**
          * check if the current code has expired before attaching to link
          * If code has expired create a new one and update user data
         */
-        let verificationCode;
-        const userId = user._id;
-        let codeExpiryDate = this.extractCodeExpiry(code)
+        let verificationCode: string;
+        const id = db._id;
+        let codeExpiryDate = this.extractCodeExpiry(db.code)
         if (this.isCodeExpired(codeExpiryDate)) {
             verificationCode = this.createCode();
-            await user.updateOne({ _id: userId }, { code: verificationCode })
+            await db.updateOne({ _id: id }, { code: verificationCode })
         } else {
-            verificationCode = code;
+            verificationCode = db.code;
         }
-        const { app_url } = process.env;
-        return `${app_url}/${path}/${userId}_${this.createShortId()}_${this.extractCode(verificationCode)}_${this.createShortId()}`;
+        const { App_url } = process.env;
+        return `${App_url}/${redirectPath}/${id}_${this.createShortId()}_${this.extractCode(verificationCode)}_${this.createShortId()}`;
     }
 
-    async sendVerificationLink(user: IUser, subject: string): Promise<void> {
-        // send user email verification
-        const { _id, code, email } = user;
-        let link = await this.createVerificationUrl(_id, code, 'verify');
-        let testTemaplate = `<div><a href=${link}>${subject}</a></div>`;
-        await this.sendNoTification(email, subject, testTemaplate);
+    async createEmailTemplate(templateData: Dictionary, template: string): Promise<string> {
+        const templatePath = path.join(__dirname, `../../core/notification/templates/${template}.ejs`);
+        return await renderFile(templatePath, templateData);
+    }
+
+    async sendNoTification(notificationData: INotification): Promise<void> {
+        const { db, reciever, redirectPath, template, templateData, subject } = notificationData;
+
+        templateData.link = path ? await this.createTemplateUrl(db, redirectPath) : '#';
+        let html = await this.createEmailTemplate(templateData, template);
+        const mailData: MailOptions = {
+            to: reciever,
+            subject: subject,
+            html: html
+        }
+
+        await this.sendEmail(mailData);
     }
 
     createShortId(): string {
@@ -95,14 +107,5 @@ export default class CommonHelper implements ICommonHelper {
         // delete the uploaded image from the "uploads dir" after successful upload to cloudinary
         this.cloudinaryClient.deleteTempUploads(uploadPth);
         return imageUploadRes;
-    }
-
-    async sendNoTification(reciever: string, subject: string, template: string): Promise<void> {
-        const data = {
-            to: reciever,
-            subject: subject,
-            html: template
-        }
-        await this.sendEmail(data);
     }
 }

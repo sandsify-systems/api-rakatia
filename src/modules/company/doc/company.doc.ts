@@ -1,6 +1,9 @@
 import errorResponsesDoc from "../../../core/swagger/errorResponses.doc";
 
 const companySignUpRequestBody = {
+  ownersId: {
+    type: 'string',
+  },
   name: {
     type: 'string',
   },
@@ -21,6 +24,13 @@ const companySignUpRequestBody = {
   }
 };
 
+const sendInvitationRequestBody = {
+  sendersId: { type: 'string' },
+  companyId: { type: 'string' },
+  inviteeEmail: { type: 'string' },
+  role: { type: 'string' }
+}
+
 const responseProperties = {
   status: {
     type: 'string'
@@ -35,14 +45,14 @@ const responseProperties = {
 
 export const companySignUpApiDoc = {
   post: {
-    description: 'Creates a new company account',
+    description: 'Creates a new company',
     requestBody: {
       required: true,
       content: {
         'application/json': {
           schema: {
             type: 'object',
-            required: ['name', 'email', 'phoneNumber', 'address'],
+            required: ['name', 'ownersId'],
             properties: {
               ...companySignUpRequestBody
             },
@@ -51,7 +61,7 @@ export const companySignUpApiDoc = {
         'multipart/form-data': {
           schema: {
             type: 'object',
-            required: ['name', 'email', 'phoneNumber', 'address'],
+            required: ['name', 'ownersId'],
             properties: {
               ...companySignUpRequestBody,
               logo: {
@@ -65,7 +75,7 @@ export const companySignUpApiDoc = {
     },
     responses: {
       '200': {
-        description: 'Comapny Reg API Success Response Example',
+        description: 'Comapny Setup API Success Response Example',
         content: {
           'application/json': {
             schema: {
@@ -76,7 +86,7 @@ export const companySignUpApiDoc = {
             },
             example: {
               status: 'success',
-              message: 'Comapny account created successfully',
+              message: 'Comapny created successfully',
               data: {
                 'name': 'comapny_name',
                 'email': 'company@test.com',
@@ -108,6 +118,132 @@ export const companySignUpApiDoc = {
               status: 'error',
               statusCode: 422,
               message: 'comapny name is required',
+              data: null
+            },
+          },
+        },
+      },
+      ...errorResponsesDoc(),
+    },
+  },
+};
+
+export const sendInvitationApiDoc = {
+  post: {
+    description: 'Sends invitation to a user to join a company',
+    requestBody: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            required: ['sendersId', 'companyId', 'inviteeEmail'],
+            properties: {
+              ...sendInvitationRequestBody
+            },
+          },
+        },
+      },
+    },
+    responses: {
+      '200': {
+        description: 'Send invitation API Success Response Example',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                ...sendInvitationRequestBody
+              },
+            },
+            example: {
+              status: 'success',
+              message: 'Invitation sent successfully',
+              data: null
+            },
+          },
+        },
+      },
+      '422': {
+        description: 'Send invitation API Error Response Example',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                statusCode: {
+                  type: 'number'
+                },
+                ...responseProperties
+              },
+            },
+            example: {
+              status: 'error',
+              statusCode: 422,
+              message: 'company sendersId is required',
+              data: null
+            },
+          },
+        },
+      },
+      ...errorResponsesDoc(),
+    },
+  },
+};
+
+export const acceptInvitationApiDoc = {
+  post: {
+    description: 'Accept invitation to join a company',
+    requestBody: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            required: ['invitationId'],
+            properties: {
+              invitationId: { type: 'string' }
+            },
+          },
+        },
+      },
+    },
+    responses: {
+      '200': {
+        description: 'Accept invitation API Success Response Example',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                invitationId: { type: 'string' }
+              },
+            },
+            example: {
+              status: 'success',
+              message: 'Invitation accepted successfully',
+              data: null
+            },
+          },
+        },
+      },
+      '422': {
+        description: 'Accept invitation API Error Response Example',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                statusCode: {
+                  type: 'number'
+                },
+                ...responseProperties
+              },
+            },
+            example: {
+              status: 'error',
+              statusCode: 422,
+              message: 'invitationId is required',
               data: null
             },
           },

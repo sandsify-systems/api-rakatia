@@ -1,7 +1,7 @@
 import { config } from 'dotenv';
 config();
 import 'reflect-metadata';
-import express, { type Application} from 'express';
+import express, { type Application } from 'express';
 import { handleErrors } from '../core/utils';
 import router from './routes';
 import fileupload from 'express-fileupload';

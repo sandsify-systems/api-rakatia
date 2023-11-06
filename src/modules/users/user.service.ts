@@ -12,11 +12,15 @@ import { Exception } from '../../core/utils';
 import { UserModelType } from '../../core/database/models/user/user.model';
 import UserHelper from './helper';
 import { CompanyModelType } from '../../core/database/models/company/company.model';
+import Invitations from '../../core/database/models/invitations/invitations.model';
+import { InvitationsModelType } from '../../core/database/models/invitations/invitations.model';
+import { INotification } from '../common/common.dto';
 
 export default class UserService extends UserHelper implements IUserService {
-
+	invitations: InvitationsModelType
 	constructor(user: UserModelType, company: CompanyModelType) {
 		super(user, company);
+		this.invitations = Invitations;
 	}
 
 	/**
@@ -26,28 +30,99 @@ export default class UserService extends UserHelper implements IUserService {
 	 */
 	async signUp(data: IUserSignUp): Promise<userSubset> {
 		try {
-			const { email, password, firstName, lastName, phoneNumber, profileImage } = data;
+			const { email, password, firstName, lastName, phoneNumber, profileImage, invitationId } = data;
+
+			// If the user was invited the request body must contain the "invitationId"
+			if (invitationId) {
+				await this.signUpByInvitation(data);
+			}
+
 			let user = await this.user.findOne({ email: email });
+			// check if user with the provided email already exist
+			if (user) { throw this.userExist(`The email provided is already associated with another user's account`) };
 
-			//check if user with the provided email already exist
-			if (user) { throw this.userExist(email) };
-
-			const name = `${firstName} ${lastName}`;
+			const name = (firstName && lastName) ? `${firstName} ${lastName}` : null;
 			const userData: any = { name, email, password, phoneNumber };
 			if (profileImage) {
 				const { public_id, secure_url } = await this.uploadToCloudinary(profileImage, 'profile_image');
 				userData.imagePublicId = public_id;
 				userData.imageUrl = secure_url
 			}
-			const $user = await new this.user(userData).save();
+			user = await new this.user(userData).save();
+			console.log(user)
 
 			// send user email verification
-			this.sendVerificationLink($user, 'Verify account');
+			const notificationData: INotification = {
+				db: user,
+				reciever: email,
+				subject: 'Verify your account',
+				template: 'verify-account',
+				templateData: {},
+				redirectPath: 'verify'
+			}
+			await this.sendNoTification(notificationData);
 
-			return this.getUserSubset($user);
+			return this.getUserSubset(user);
 		} catch (err: any) {
 			throw this.handleError(err);
 		}
+	}
+
+	/**
+	 * Create a new user by invitation and add the user to the invitation sender's staffs list
+	 * @param data 
+	 * @returns userSubset
+	 */
+	async signUpByInvitation(data: IUserSignUp): Promise<userSubset> {
+		const { APP_URL } = process.env;
+		const { email, password, invitationId } = data;
+
+		const invite = await this.invitations.findOne({ _id: invitationId });
+		const { sendersId, companyId, inviteeRoll } = this.validateInvitation(invite);
+
+		// get the user that sent the invitation
+		const inviteSentBy = await this.user.findOne({ _id: sendersId });
+		if (!inviteSentBy) this.userDoesNotExist('The invitation sender\'s ID is not valid');
+
+		// get the company the user was invited to join
+		const company = await this.company.findOne({ _id: companyId, ownersId: inviteSentBy._id });
+		if (!company) { this.userDoesNotExist('The invitation sender does not own a company with the provided company ID'); }
+
+		// if the invited user does not exist, create a new user account
+		let user = await this.user.findOne({ email: email });
+		if (!user) {
+			user = await new this.user({ email: email, password: password, isVerified: true }).save();
+			// Send a welcome unboard message to user on succesfull account setup
+			const notificationData: INotification = {
+				db: user,
+				reciever: email,
+				subject: 'Welcome to Rakatia',
+				template: 'welcome',
+				templateData: {},
+				redirectPath: 'login'
+			}
+			await this.sendNoTification(notificationData);
+		}
+
+		// update the invitation schema status to accepted
+		await this.invitations.updateOne({ _id: invitationId }, { invitationStatus: 'accepted' });
+
+		// add the user to the company staffs list
+		company.staffs.push({ staffId: user._id, role: inviteeRoll });
+		await company.save();
+
+		// Notify user that they've been added to a company 
+		const notificationData: INotification = {
+			db: user,
+			reciever: email,
+			subject: 'Invitation accepted',
+			template: 'invite-accepted',
+			templateData: { companyName: company.name, role: inviteeRoll },
+			redirectPath: 'login'
+		}
+		await this.sendNoTification(notificationData);
+
+		return this.getUserSubset(user);
 	}
 
 	/**
@@ -61,12 +136,20 @@ export default class UserService extends UserHelper implements IUserService {
 			const user = await this.user.findOne({ email: email });
 
 			if (!user) {
-				throw this.userDoesNotExist(email);
+				throw this.userDoesNotExist(`There's no user account associated with this email:- ${email}`);
 			}
 
 			// If non verified user try to signin throw error and resend new verification link
 			if (user && !user.isVerified) {
-				this.sendVerificationLink(user, 'Verify account');
+				const notificationData: INotification = {
+					db: user,
+					reciever: email,
+					subject: 'Verify your account',
+					template: 'verify-account',
+					templateData: {},
+					redirectPath: 'verify'
+				}
+				await this.sendNoTification(notificationData);
 				throw new Exception(
 					'The account associated with this email is not verified. Please check your email for a new verification link',
 					404
@@ -92,7 +175,7 @@ export default class UserService extends UserHelper implements IUserService {
 			const user = await this.user.findOne({ _id: userId });
 
 			if (!user) {
-				throw this.userDoesNotExist(userId);
+				throw this.userDoesNotExist(`There's no user account associated with the provided userId`);
 			}
 
 			if (user.isVerified) {
@@ -103,7 +186,15 @@ export default class UserService extends UserHelper implements IUserService {
 			const codeExpiryDate: string = this.extractCodeExpiry(user.code);
 			if (this.isCodeExpired(codeExpiryDate)) {
 				// Resend verification link
-				this.sendVerificationLink(user, 'Verify account');
+				const notificationData: INotification = {
+					db: user,
+					reciever: user.email,
+					subject: 'Verify your account',
+					template: 'verify-account',
+					templateData: {},
+					redirectPath: 'verify'
+				}
+				await this.sendNoTification(notificationData);
 				throw new Exception('verification link has expired please check your email for a new link', 404);
 			}
 
@@ -115,9 +206,15 @@ export default class UserService extends UserHelper implements IUserService {
 			await this.updateUser({ _id: userId }, { isVerified: true });
 
 			// Send welcome email to user after successful account verification
-			const { APP_URL } = process.env;
-			let testTemaplate = `<div><a href=${APP_URL}/login>Account averified please proceed to login</a></div>`;
-			await this.sendNoTification(user.email, 'Welcome to rakatia', testTemaplate);
+			const notificationData: INotification = {
+				db: user,
+				reciever: user.email,
+				subject: 'Welcome to Rakatia',
+				template: 'welcome',
+				templateData: {},
+				redirectPath: 'login'
+			}
+			await this.sendNoTification(notificationData);
 
 			return { userId: user._id };
 		} catch (err) {
@@ -127,7 +224,7 @@ export default class UserService extends UserHelper implements IUserService {
 
 	/**
 	 * reset  password service
-	 *  @param email
+	 * @param email
 	 * @returns
 	*/
 	public async resetPassword(data: IUserEmail): Promise<void> {
@@ -136,11 +233,19 @@ export default class UserService extends UserHelper implements IUserService {
 			const user = await this.user.findOne({ email: email });
 
 			if (!user) {
-				throw this.userDoesNotExist(email);
+				throw this.userDoesNotExist(`There's no user account associated with this email:- ${email}`);
 			}
 
 			// send reset code
-			this.sendVerificationLink(user, 'Reset password');
+			const notificationData: INotification = {
+				db: user,
+				reciever: email,
+				subject: 'Reset password',
+				template: 'reset-password',
+				templateData: {},
+				redirectPath: 'update-password'
+			}
+			await this.sendNoTification(notificationData);
 		} catch (err) {
 			throw this.handleError(err);
 		}
@@ -157,14 +262,22 @@ export default class UserService extends UserHelper implements IUserService {
 			const user = await this.user.findOne({ _id: userId });
 
 			if (!user) {
-				throw this.userDoesNotExist(userId);
+				throw this.userDoesNotExist(`There's no user account associated with the provided userId`);
 			}
 
 			const verificationCode: string = this.extractCode(user.code);
 			const codeExpiryDate: string = this.extractCodeExpiry(user.code);
 			if (this.isCodeExpired(codeExpiryDate)) {
 				// Resend passsword reset link
-				this.sendVerificationLink(user, 'Reset password');
+				const notificationData: INotification = {
+					db: user,
+					reciever: user.email,
+					subject: 'Reset password',
+					template: 'reset-password',
+					templateData: {},
+					redirectPath: 'update-password'
+				}
+				await this.sendNoTification(notificationData);
 				throw new Exception('Link expired, a new password reset link has been sent to your email', 404);
 			}
 
@@ -175,7 +288,15 @@ export default class UserService extends UserHelper implements IUserService {
 			// updated user status to verified
 			newPassword = await this.hashPassword(newPassword);
 			await this.updateUser({ _id: userId }, { password: newPassword });
-
+			const notificationData: INotification = {
+				db: user,
+				reciever: user.email,
+				subject: 'Password updated',
+				template: 'password-updated',
+				templateData: {},
+				redirectPath: 'login'
+			}
+			await this.sendNoTification(notificationData);
 		} catch (err) {
 			throw this.handleError(err);
 		}
