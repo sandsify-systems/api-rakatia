@@ -66,24 +66,4 @@ export default class UserHelper extends CommonHelper implements IUserHelper {
 	async updateUser(params: Dictionary, data: Dictionary): Promise<void> {
 		await this.user.updateOne(params, data);
 	}
-
-	validateInvitation(invite: Iinvitations | null): Iinvitations {
-
-		if (!invite) {
-			throw new Exception('Can not find the requested invitation', 402);
-		}
-		if (invite.invitationStatus === 'accepted') {
-			throw new Exception('Invitation already accepted please proceed to login', 402)
-		}
-		if (invite.invitationStatus === 'rejected') {
-			throw new Exception('Invitation already rejected please ask the sender to send a new invitation or proceed to signup page', 402)
-		}
-
-		// Note: we could also check for expired invitation by checking the code expiry
-		// if (this.isCodeExpired(invite.invitationCode)) {
-		// 	throw new Exception('Invalid invitation code', 402);
-		// }
-		const { sendersId, companyId, inviteeRoll } = invite;
-		return { sendersId: sendersId, companyId: companyId, inviteeRoll: inviteeRoll } as Iinvitations;
-	}
 }

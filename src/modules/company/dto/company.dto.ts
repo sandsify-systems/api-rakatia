@@ -1,7 +1,9 @@
 import { ICompany } from "../../../core/database/models/company/company.model";
 import { Request, Response, NextFunction } from "express";
-import { IUpload } from "../../common/common.dto";
+import { Dictionary, IUpload } from "../../common/common.dto";
 import { Types } from 'mongoose';
+import { Iinvitations } from "../../../core/database/models/invitations/invitations.model";
+import { IUser } from "../../../core/database/models/user/user.model";
 
 export interface ICompanyService {
 	createCompany(data: ICompanySignUp): Promise<comapnySubset>
@@ -19,6 +21,8 @@ export interface ICompanyHelper {
 	getCompanySubset(company: ICompany): comapnySubset
 	companyExist(message: string): void
 	companyDoesNotExist(message: string): void
+	acceptInvite(data: Dictionary): Promise<void>
+	validateInvitation(invite: Iinvitations | null): Iinvitations
 }
 
 export interface ICompanySignUp {
@@ -54,5 +58,9 @@ export interface ISendInvitation {
 }
 
 export interface IAcceptInvitation {
-	invitationId: Types.ObjectId
+	invitee:IUser
+	company:ICompany
+	invitationId:Types.ObjectId 
+	reciever:string, 
+	role: string
 }
