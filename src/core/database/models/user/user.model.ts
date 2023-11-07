@@ -36,7 +36,6 @@ export const UserSchema: Schema = new Schema<IUser>({
     phoneNumber: {
         type: String,
         required: false,
-        unique: true
     },
     imageUrl: {
         type: String,

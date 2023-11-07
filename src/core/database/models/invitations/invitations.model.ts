@@ -7,7 +7,7 @@ export interface Iinvitations extends Document {
     sendersEmail: string
     recieversEmail: string
     companyId: Types.ObjectId
-    inviteeRoll: string
+    inviteeRole: string
     invitationStatus: string
     code: string
 }
@@ -29,7 +29,7 @@ export const InvitationsSchema: Schema = new Schema<Iinvitations>({
         type: Schema.Types.ObjectId,
         required: true,
     },
-    inviteeRoll: {
+    inviteeRole: {
         type: String,
         required: true
     },

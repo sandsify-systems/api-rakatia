@@ -1,8 +1,6 @@
 import { IUser } from "../../../core/database/models/user/user.model";
 import { Request, Response, NextFunction } from "express";
 import { IUpload } from "../../common/common.dto";
-import { Types } from "mongoose";
-import { Iinvitations } from "../../../core/database/models/invitations/invitations.model";
 
 export interface IUserService {
 	signUp(data: IUserSignUp): Promise<userSubset>
@@ -28,7 +26,6 @@ export interface IUserHelper {
 	userDoesNotExist(message: string): void
 	getUserSubset(user: IUser): userSubset
 	updateUser(params: Dictionary, data: userSubset): void
-	validateInvitation(params: Iinvitations): Iinvitations
 }
 
 export interface IUserSignUp {

@@ -9,18 +9,24 @@ import {
 	IUpdatePassword,
 } from './dto/user.dto';
 import { Exception } from '../../core/utils';
-import { UserModelType } from '../../core/database/models/user/user.model';
+import { IUser, UserModelType } from '../../core/database/models/user/user.model';
 import UserHelper from './helper';
 import { CompanyModelType } from '../../core/database/models/company/company.model';
 import Invitations from '../../core/database/models/invitations/invitations.model';
 import { InvitationsModelType } from '../../core/database/models/invitations/invitations.model';
 import { INotification } from '../common/common.dto';
+import { Dictionary } from '../common/common.dto';
+import CompanyHelper from '../company/helper';
+import { ICompanyHelper } from '../company/dto/company.dto';
 
 export default class UserService extends UserHelper implements IUserService {
 	invitations: InvitationsModelType
+	companyHelper: ICompanyHelper;
+
 	constructor(user: UserModelType, company: CompanyModelType) {
 		super(user, company);
 		this.invitations = Invitations;
+		this.companyHelper = new CompanyHelper(user, company, Invitations);
 	}
 
 	/**
@@ -34,36 +40,77 @@ export default class UserService extends UserHelper implements IUserService {
 
 			// If the user was invited the request body must contain the "invitationId"
 			if (invitationId) {
-				await this.signUpByInvitation(data);
+				return await this.signUpByInvitation(data);
 			}
 
 			let user = await this.user.findOne({ email: email });
 			// check if user with the provided email already exist
-			if (user) { throw this.userExist(`The email provided is already associated with another user's account`) };
+			if (user) {
+				throw this.userExist(`The email provided is already associated with another user's account`)
+			};
+
+			// check if user with the provided phoneNumber already exist
+			if (phoneNumber) {
+				user = await this.user.findOne({ phoneNumber: phoneNumber });
+				if (user) {
+					throw this.userExist(`The phoneNumber provided is already associated with another user's account`);
+				}
+			};
 
 			const name = (firstName && lastName) ? `${firstName} ${lastName}` : null;
-			const userData: any = { name, email, password, phoneNumber };
+			const userData: Dictionary = { name, email, password, phoneNumber };
 			if (profileImage) {
 				const { public_id, secure_url } = await this.uploadToCloudinary(profileImage, 'profile_image');
 				userData.imagePublicId = public_id;
 				userData.imageUrl = secure_url
 			}
-			user = await new this.user(userData).save();
-			console.log(user)
 
-			// send user email verification
-			const notificationData: INotification = {
-				db: user,
-				reciever: email,
-				subject: 'Verify your account',
-				template: 'verify-account',
-				templateData: {},
-				redirectPath: 'verify'
+			return this.createUser(userData);
+		} catch (err: any) {
+			throw this.handleError(err);
+		}
+	}
+
+	/**
+	 * Create a verified user if invitation ID is given
+	 * @param userData 
+	 * @param invitationId 
+	 * @returns userSubset
+	 */
+	async createUser(userData: Dictionary, invitationId = null): Promise<userSubset> {
+		try {
+			let user: IUser;
+			let notificationData: INotification;
+
+			// If invitation ID is given create a
+			if (invitationId) {
+				userData.isVerified = true;
+				user = await new this.user(userData).save();
+				// Send a welcome unboard message to user on succesfull account setup
+				notificationData = {
+					db: user,
+					reciever: user.email,
+					subject: 'Welcome to Rakatia',
+					template: 'welcome',
+					templateData: {},
+					redirectPath: 'login'
+				}
+			} else {
+				user = await new this.user(userData).save();
+				// send user email verification
+				notificationData = {
+					db: user,
+					reciever: user.email,
+					subject: 'Verify your account',
+					template: 'verify-account',
+					templateData: {},
+					redirectPath: 'verify'
+				}
 			}
 			await this.sendNoTification(notificationData);
 
 			return this.getUserSubset(user);
-		} catch (err: any) {
+		} catch (err) {
 			throw this.handleError(err);
 		}
 	}
@@ -74,55 +121,33 @@ export default class UserService extends UserHelper implements IUserService {
 	 * @returns userSubset
 	 */
 	async signUpByInvitation(data: IUserSignUp): Promise<userSubset> {
-		const { APP_URL } = process.env;
-		const { email, password, invitationId } = data;
+		try {
+			const { email, password, invitationId } = data;
+			const invitation = await this.invitations.findOne({ _id: invitationId });
+			const { sendersId, companyId, inviteeRole } = this.companyHelper.validateInvitation(invitation);
 
-		const invite = await this.invitations.findOne({ _id: invitationId });
-		const { sendersId, companyId, inviteeRoll } = this.validateInvitation(invite);
-
-		// get the user that sent the invitation
-		const inviteSentBy = await this.user.findOne({ _id: sendersId });
-		if (!inviteSentBy) this.userDoesNotExist('The invitation sender\'s ID is not valid');
-
-		// get the company the user was invited to join
-		const company = await this.company.findOne({ _id: companyId, ownersId: inviteSentBy._id });
-		if (!company) { this.userDoesNotExist('The invitation sender does not own a company with the provided company ID'); }
-
-		// if the invited user does not exist, create a new user account
-		let user = await this.user.findOne({ email: email });
-		if (!user) {
-			user = await new this.user({ email: email, password: password, isVerified: true }).save();
-			// Send a welcome unboard message to user on succesfull account setup
-			const notificationData: INotification = {
-				db: user,
-				reciever: email,
-				subject: 'Welcome to Rakatia',
-				template: 'welcome',
-				templateData: {},
-				redirectPath: 'login'
+			// get the user that sent the invitation
+			const inviteSentBy = await this.user.findOne({ _id: sendersId });
+			if (!inviteSentBy) {
+				this.userDoesNotExist('The invitation sender\'s ID is not valid');
 			}
-			await this.sendNoTification(notificationData);
+			// get the company the user was invited to join
+			const company = await this.company.findOne({ _id: companyId, ownersId: inviteSentBy._id });
+			if (!company) {
+				this.userDoesNotExist('The invitation sender does not own a company with the provided company ID');
+			}
+
+			// if the invited user does not exist, create a new user account
+			let invitee = await this.user.findOne({ email: email });
+			if (!invitee) {
+				await this.createUser({ email: email, password: password, isVerified: true }, invitationId);
+			}
+			await this.companyHelper.acceptInvite({ invitee, company, invitationId, reciever: email, role: inviteeRole });
+
+			return this.getUserSubset(invitee);
+		} catch (err: any) {
+			throw this.handleError(err);
 		}
-
-		// update the invitation schema status to accepted
-		await this.invitations.updateOne({ _id: invitationId }, { invitationStatus: 'accepted' });
-
-		// add the user to the company staffs list
-		company.staffs.push({ staffId: user._id, role: inviteeRoll });
-		await company.save();
-
-		// Notify user that they've been added to a company 
-		const notificationData: INotification = {
-			db: user,
-			reciever: email,
-			subject: 'Invitation accepted',
-			template: 'invite-accepted',
-			templateData: { companyName: company.name, role: inviteeRoll },
-			redirectPath: 'login'
-		}
-		await this.sendNoTification(notificationData);
-
-		return this.getUserSubset(user);
 	}
 
 	/**
@@ -150,10 +175,7 @@ export default class UserService extends UserHelper implements IUserService {
 					redirectPath: 'verify'
 				}
 				await this.sendNoTification(notificationData);
-				throw new Exception(
-					'The account associated with this email is not verified. Please check your email for a new verification link',
-					404
-				)
+				throw this.userExist('The account associated with this email is not verified. Please check your email for a new verification link');
 			}
 
 			await this.comparePassword(password, user.password);
@@ -179,7 +201,7 @@ export default class UserService extends UserHelper implements IUserService {
 			}
 
 			if (user.isVerified) {
-				throw new Exception('Account already verified please proceed to login', 404);
+				throw this.userExist('Account already verified please proceed to login');
 			}
 
 			const verificationCode: string = this.extractCode(user.code);
