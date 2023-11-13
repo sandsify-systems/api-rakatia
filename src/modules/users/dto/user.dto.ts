@@ -1,27 +1,32 @@
 import { IUser } from "../../../core/database/models/user/user.model";
 import { Request, Response, NextFunction } from "express";
 import { IUpload } from "../../common/common.dto";
+import { Types } from "mongoose";
 
 export interface IUserService {
 	signUp(data: IUserSignUp): Promise<userSubset>
+	createUser(userData: Dictionary, invitationId: string | null): Promise<IUser>
+	signUpByInvitation(data: IUserSignUp): Promise<userSubset>
 	signIn(data: IUserSignIn): Promise<IAccessToken>
 	verifyAccount(data: IVerifyAccount): Promise<{ userId: string }>
 	resetPassword(data: IUserEmail): Promise<void>
 	updatePassword(data: IUpdatePassword): Promise<void>
+	getUser(param: Dictionary): Promise<any>
 }
 
 export interface IUserController {
 	signUp(req: Request, res: Response, next: NextFunction): void
 	signIn(req: Request, res: Response, next: NextFunction): void
 	verifyAccount(req: Request, res: Response, next: NextFunction): void
-	updatePassword(req: Request, res: Response, next: NextFunction): void
 	resetPassword(req: Request, res: Response, next: NextFunction): void
+	updatePassword(req: Request, res: Response, next: NextFunction): void
+	getUser(req: Request, res: Response, next: NextFunction): void
 }
 
 export interface IUserHelper {
 	hashPassword(password: string): Promise<string>
 	comparePassword(password: string, hashedPassword: string): Promise<void>
-	generateAccessToken(data: userSubset): IAccessToken
+	generateAccessToken(data: { id: string }): IAccessToken
 	userExist(message: string): void
 	userDoesNotExist(message: string): void
 	getUserSubset(user: IUser): userSubset
@@ -51,15 +56,20 @@ export type userSubset = Pick<
 	'phoneNumber' |
 	'imageUrl' |
 	'imagePublicId' |
-	'_id'
+	'_id' |
+	'roles'
 >
 
 export interface IAccessToken {
 	token: string;
 }
 
+export interface IDecodedToken {
+	id: string;
+}
+
 export interface IVerifyAccount {
-	userId: string
+	userId: Types.ObjectId,
 	code: string
 }
 
@@ -72,7 +82,7 @@ export interface IUserEmail {
 }
 
 export interface IUpdatePassword {
-	userId: string,
+	userId: Types.ObjectId,
 	code: string
 	newPassword: string
 }

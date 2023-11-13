@@ -10,6 +10,8 @@ import moment from 'moment';
 import * as shortid from 'shortid';
 import { IUser } from '../../core/database/models/user/user.model';
 import { renderFile } from 'ejs';
+import { Types } from 'mongoose';
+import { ObjectId } from 'mongodb';
 
 export default class CommonHelper implements ICommonHelper {
     cloudinaryClient: ICloudinary
@@ -34,6 +36,12 @@ export default class CommonHelper implements ICommonHelper {
         const currentTime = moment(new Date(), "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD HH:mm:ss");
         return moment(codeExpiryDate).isBefore(currentTime);
     };
+
+    validateID(id: Types.ObjectId) {
+        if (!ObjectId.isValid(id)) {
+            throw new Exception(`The given ID:- "${id}" is not a valid model ID fomart`, 422);
+        }
+    }
 
     async createTemplateUrl(db: any, redirectPath: string): Promise<string> {
         /**

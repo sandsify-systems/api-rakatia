@@ -43,9 +43,12 @@ const responseProperties = {
   }
 };
 
-export const companySignUpApiDoc = {
+export const createComapnyApiDoc = {
   post: {
     description: 'Creates a new company',
+    security: [{
+      bearerAuth: []
+    }],
     requestBody: {
       required: true,
       content: {
@@ -131,6 +134,9 @@ export const companySignUpApiDoc = {
 export const sendInvitationApiDoc = {
   post: {
     description: 'Sends invitation to a user to join a company',
+    security: [{
+      bearerAuth: []
+    }],
     requestBody: {
       required: true,
       content: {

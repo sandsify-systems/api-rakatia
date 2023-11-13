@@ -18,7 +18,6 @@ export default class CompanyController implements ICompanyController {
 
 	async createCompany(req: CustomRequest, res: Response, next: NextFunction): Promise<void> {
 		try {
-			console.log(req.user)
 			let upload = req.files
 			const companyLogo = upload?.logo ? await this.helper.getUploadedFile(<UploadedFile>upload?.logo) : null;
 			let payload = req.body;

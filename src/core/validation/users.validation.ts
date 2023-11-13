@@ -1,4 +1,4 @@
-import { check } from 'express-validator';
+import { check, param } from 'express-validator';
 
 export const signUpValidation = [
 	check('firstName').isString().optional(),
@@ -54,3 +54,6 @@ export const updatePassword = [
 	check('code').isString().notEmpty().withMessage('verification code is required'),
 	check('newPassword').isString().notEmpty().withMessage('verification code is required'),
 ];
+
+export const getUser = [
+]

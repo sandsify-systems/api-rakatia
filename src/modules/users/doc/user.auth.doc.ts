@@ -179,7 +179,7 @@ export const signInApiDoc = {
               status: 'success',
               message: 'User signin successful',
               data: {
-                'token': '"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmaXJzdE5hbWUiOiJ5eXl5eXl5eXl5eXl5eSIsImxhc3ROYW1lIjoiaGhoaGhoaGhoaGhoaGhoaGhoIiwiZW1haWwiOiJiZ2hwQGhoLmNvbSIsInBob25lTnVtYmVyIjoiNDU4NzUxNDc1MjciLCJpbWFnZVVybCI6Imh0dHBzOi8vcmVzLmNsb3VkaW5hcnkuY29tL2RldHh5dmM4ay9pbWFnZS91cGxvYWQvdjE2OTc4MDI0MzkvcHJvZmlsZV9pbWFnZXMvMjM0XzcwNl83MDVfNDc5OF8yMDE4MDkyMV8yMjUyMjlfd2xubDd5LmpwZyIsImltYWdlUHVibGljSWQiOiJwcm9maWxlX2ltYWdlcy8yMzRfNzA2XzcwNV80Nzk4XzIwMTgwOTIxXzIyNTIyOV93bG5sN3kiLCJyb2xlIjoiNjUzMTRkODk5MDYxZTYxZjcxNjNmN2U1IiwiX2lkIjoiNjUzMjY4YzhkOTc4NzkxMTY3MDBlZDBjIiwiZXhwaXJlQXQiOiIyNGhyIiwiaWF0IjoxNjk3ODAzMTI2fQ.sSk2y1qUDK1Ku1W3m0ttY6Ja7OJD8jsmEN8yBMLA-BY',
+                'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1NDljMTA4YmY2YWE0NGMyNTE1Yjc5NyIsImV4cGlyZUF0IjoiMjRociIsImlhdCI6MTY5OTc5NzM1NX0.d3IvBb4E7PwrCxbfx42LvzumoiEkmpWMvIe_8cyzj8w',
               },
             },
           },

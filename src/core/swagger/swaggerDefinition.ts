@@ -5,9 +5,10 @@ import {
     verifyAccount,
     resetPassword,
     updatePassword,
-} from '../../modules/users/doc/user.doc';
+} from '../../modules/users/doc/user.auth.doc';
+import { getUser } from '../../modules/users/doc/user.get.doc';
 import {
-    companySignUpApiDoc,
+    createComapnyApiDoc,
     sendInvitationApiDoc,
     acceptInvitationApiDoc
 } from '../../modules/company/doc/company.doc';
@@ -29,18 +30,16 @@ const swaggerDefinition = swaggerJSDoc({
                 }
             }
         },
-        security: [{
-            bearerAuth: []
-        }],
         paths: {
             '/users/signup': { ...signUpApiDoc },
             '/users/signin': { ...signInApiDoc },
             '/users/verify': { ...verifyAccount },
             '/users/reset-password': { ...resetPassword },
             '/users/update-password': { ...updatePassword },
-            '/company/create': { ...companySignUpApiDoc },
+            '/company/create': { ...createComapnyApiDoc },
             '/company/send-invitation': { ...sendInvitationApiDoc },
-            '/company/accept-invitation': { ...acceptInvitationApiDoc }
+            '/company/accept-invitation': { ...acceptInvitationApiDoc },
+            '/users': { ...getUser }
         },
     },
     basePath: '/',

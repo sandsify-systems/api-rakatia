@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { log } from './logger'
 import jwt from 'jsonwebtoken';
-import { userSubset } from '../../modules/users/dto/user.dto';
+import { IDecodedToken } from '../../modules/users/dto/user.dto';
 import { Exception } from './errorhandler';
 
 // Get token from headers
@@ -14,8 +14,10 @@ export const getAuthToken = (req: Request) => {
   }
 };
 
+
+
 export interface CustomRequest extends Request {
-  user: userSubset | null;
+  token: IDecodedToken | null;
 }
 
 // Verify token
@@ -26,13 +28,13 @@ export const authoriseRequest = async (req: CustomRequest, res: Response, next: 
       throw new Exception('Unathorised request, missing auth token', 401);
     }
     const { JWT_SECRET } = process.env;
-    const decoded = jwt.verify(token, JWT_SECRET as string) as userSubset;
+    const decoded = jwt.verify(token, JWT_SECRET as string) as IDecodedToken;
     if (!decoded) {
       throw new Exception('Unathorised request, invalid or expired token', 401);
     }
 
-    req.user = <userSubset>decoded;
-    log.info('User authorised successfull');
+    req.token = <IDecodedToken>decoded;
+    log.info('Request authorised');
     next();
   } catch (err: any) {
     log.error({ message: 'Authorization error' }, err);

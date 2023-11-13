@@ -25,7 +25,8 @@ export const sendInvitationValidation = [
 		.withMessage('email is not a valid email')
 		.notEmpty()
 		.withMessage('email is required'),
-	check('role').isString().notEmpty().withMessage('role  is required'),
+	check('role').isString().notEmpty().withMessage('role  is required')
+	.isIn(['staff', 'admin', 'super-admin', 'manager']).withMessage('role must be on of this [ staff, admin, super-admin, manager ]'),
 ];
 
 export const acceptInvitationValidation = [
