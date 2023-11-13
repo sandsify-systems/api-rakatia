@@ -74,8 +74,7 @@ export const UserSchema: Schema = new Schema<IUser>({
     roles: [{
         role: {
             type: String,
-            enum: ['user', 'staff', 'admin', 'super-admin', 'manager'],
-            default: 'user'
+            enum: ['staff', 'admin', 'super-admin', 'manager'],
         },
         company: { type: Schema.Types.ObjectId, ref: 'Company' },
     }]

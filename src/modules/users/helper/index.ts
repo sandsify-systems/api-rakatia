@@ -7,6 +7,7 @@ import {
 	IAccessToken,
 	IUserHelper,
 	Dictionary,
+	IUserId,
 } from '../dto/user.dto';
 import _ from 'lodash';
 import { UserModelType } from "../../../core/database/models/user/user.model";
@@ -35,7 +36,7 @@ export default class UserHelper extends CommonHelper implements IUserHelper {
 		}
 	}
 
-	generateAccessToken(data: userSubset): IAccessToken {
+	generateAccessToken(data: { id: 'string' }): IAccessToken {
 		const token = jwt.sign(
 			{ ...data, expireAt: '24hr' },
 			process.env.JWT_SECRET as string
@@ -58,7 +59,8 @@ export default class UserHelper extends CommonHelper implements IUserHelper {
 			'phoneNumber',
 			'imageUrl',
 			'imagePublicId',
-			'_id'
+			'_id',
+			'roles'
 		]);
 		return pick;
 	}

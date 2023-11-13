@@ -12,6 +12,8 @@ import { INotification } from '../common/common.dto';
 import { InvitationsModelType } from '../../core/database/models/invitations/invitations.model';
 import UserHelper from '../users/helper';
 import { IUserHelper } from '../users/dto/user.dto';
+import { Exception } from '../../core/utils';
+import { ObjectId } from 'mongodb';
 
 
 export default class CompanyService extends CompanyHelper implements ICompanyService {
@@ -30,9 +32,12 @@ export default class CompanyService extends CompanyHelper implements ICompanySer
 		try {
 			let { ownersId, name, logo } = data;
 
+			// Validate provided "ownersId" to ensure it is a valid mongodb schema ID format
+			this.validateID(ownersId);
+
 			let user = await this.user.findOne({ _id: ownersId });
 			if (!user) {
-				throw this.userHelper.userDoesNotExist('Invalid user ID, the given "ownersId is not associated with any account');
+				throw this.userHelper.userDoesNotExist('Invalid user ID, the given "ownersId" is not associated with any account');
 			};
 
 			name = name.trim().toLowerCase();
@@ -87,10 +92,14 @@ export default class CompanyService extends CompanyHelper implements ICompanySer
 		try {
 			const { sendersId, inviteeEmail, companyId, role } = data;
 
+			// Validate provided "sendersId" & "companyId" to ensure they are valid mongodb schema ID format
+			this.validateID(sendersId);
+			this.validateID(companyId)
+
 			// validate senders ID
 			const sender = await this.user.findOne({ _id: sendersId });
 			if (!sender) {
-				throw this.userHelper.userDoesNotExist('Invalid user ID, the given "sendersId" is not associated with any account')
+				throw this.userHelper.userDoesNotExist('The given "sendersId" is not associated with any account')
 			};
 
 			// Check if the sender is trying to invite self
@@ -105,10 +114,15 @@ export default class CompanyService extends CompanyHelper implements ICompanySer
 			};
 
 			// validate company ID 
-			const comapny = await this.company.findOne({ _id: companyId });
-			if (!comapny) {
+			const company = await this.company.findOne({ _id: companyId });
+			if (!company) {
 				throw this.companyDoesNotExist(`There's not company associated with the provided "companyId"`)
 			};
+
+			// check if the invitee is already a member of the company with the provided company ID
+			if (invitee && company.staffs.some(staff => invitee._id.equals(staff.staffId))) {
+				throw new Exception(`The user you are trying to invite is already a member of ${company.name}`, 422);
+			}
 
 			// create invitation log
 			const invitation = await new this.invitations({
@@ -129,9 +143,9 @@ export default class CompanyService extends CompanyHelper implements ICompanySer
 			let notificationData: INotification = {
 				db: invitation,
 				reciever: inviteeEmail,
-				subject: `${sender.name} invites you to join ${comapny.name}`,
+				subject: `${sender.name} invites you to join ${company.name}`,
 				template: 'send-invite',
-				templateData: { sender: sender.name, companyName: comapny.name },
+				templateData: { sender: sender.name, companyName: company.name },
 			}
 			if (reciever) {
 				// reciever will be redirected to "accept-invitation" page to accept invite or reject
@@ -155,6 +169,10 @@ export default class CompanyService extends CompanyHelper implements ICompanySer
 	async acceptInvitation(data: IAcceptInvitation): Promise<void> {
 		try {
 			const { invitationId } = data;
+
+			// Validate provided "invitationId" to ensure it is a valid mongodb schema ID format
+			this.validateID(invitationId);
+
 			const invitation = await this.invitations.findOne({ _id: invitationId });
 			const { sendersId, companyId, inviteeRole, recieversEmail } = this.validateInvitation(invitation);
 

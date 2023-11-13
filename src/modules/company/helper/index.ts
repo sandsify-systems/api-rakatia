@@ -58,6 +58,10 @@ export default class CompanyHelper extends CommonHelper implements ICommonHelper
 			company.staffs.push({ staffId: invitee._id, role: role });
 			await company.save();
 
+			// update the invitee role
+			invitee.roles.push({ role: role, company: company });
+			invitee.save();
+
 			// Notify user that they've been added to a company 
 			const notificationData: INotification = {
 				db: invitee,

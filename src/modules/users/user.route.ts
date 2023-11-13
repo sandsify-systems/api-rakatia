@@ -4,14 +4,17 @@ import {
     signInValidation,
     verifyValidation,
     resetPassword,
-    updatePassword
-} from '../../core/validation/auth.validation';
+    updatePassword,
+    getUser
+} from '../../core/validation/users.validation';
 import { validateRequest } from '../../core/validation/index';
 import UserController from './user.controller';
 import User from '../../core/database/models/user/user.model';
 import Company from '../../core/database/models/company/company.model';
 import UserService from './user.service';
 import resMsg from '../../core/utils/response';
+import { authoriseRequest, CustomRequest } from '../../core/utils/authorizationMiddleWare';
+
 
 const userService = new UserService(User, Company);
 const userController = new UserController(userService, resMsg);
@@ -66,6 +69,17 @@ users.post(
     updatePassword,
     validateRequest,
     (req: Request, res: Response, next: NextFunction) => userController.updatePassword(req, res, next)
+);
+
+/**
+ * Get user API route
+ */
+users.get(
+    '/',
+    authoriseRequest,
+    getUser,
+    validateRequest,
+    (req: CustomRequest, res: Response, next: NextFunction) => userController.getUser(req, res, next)
 );
 
 export default users;

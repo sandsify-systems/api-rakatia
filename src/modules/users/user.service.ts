@@ -7,6 +7,8 @@ import {
 	IVerifyAccount,
 	IUserEmail,
 	IUpdatePassword,
+	IUserId,
+	IDecodedToken,
 } from './dto/user.dto';
 import { Exception } from '../../core/utils';
 import { IUser, UserModelType } from '../../core/database/models/user/user.model';
@@ -18,6 +20,7 @@ import { INotification } from '../common/common.dto';
 import { Dictionary } from '../common/common.dto';
 import CompanyHelper from '../company/helper';
 import { ICompanyHelper } from '../company/dto/company.dto';
+import { ObjectId } from 'mongodb';
 
 export default class UserService extends UserHelper implements IUserService {
 	invitations: InvitationsModelType
@@ -43,7 +46,7 @@ export default class UserService extends UserHelper implements IUserService {
 				return await this.signUpByInvitation(data);
 			}
 
-			let user = await this.user.findOne({ email: email });
+			let user: IUser = await this.user.findOne({ email: email });
 			// check if user with the provided email already exist
 			if (user) {
 				throw this.userExist(`The email provided is already associated with another user's account`)
@@ -65,7 +68,8 @@ export default class UserService extends UserHelper implements IUserService {
 				userData.imageUrl = secure_url
 			}
 
-			return this.createUser(userData);
+			user = await this.createUser(userData);
+			return this.getUserSubset(user);
 		} catch (err: any) {
 			throw this.handleError(err);
 		}
@@ -77,14 +81,13 @@ export default class UserService extends UserHelper implements IUserService {
 	 * @param invitationId 
 	 * @returns userSubset
 	 */
-	async createUser(userData: Dictionary, invitationId = null): Promise<userSubset> {
+	async createUser(userData: Dictionary, invitationId = null): Promise<IUser> {
 		try {
 			let user: IUser;
 			let notificationData: INotification;
 
 			// If invitation ID is given create a
 			if (invitationId) {
-				userData.isVerified = true;
 				user = await new this.user(userData).save();
 				// Send a welcome unboard message to user on succesfull account setup
 				notificationData = {
@@ -109,7 +112,7 @@ export default class UserService extends UserHelper implements IUserService {
 			}
 			await this.sendNoTification(notificationData);
 
-			return this.getUserSubset(user);
+			return user;;
 		} catch (err) {
 			throw this.handleError(err);
 		}
@@ -138,9 +141,9 @@ export default class UserService extends UserHelper implements IUserService {
 			}
 
 			// if the invited user does not exist, create a new user account
-			let invitee = await this.user.findOne({ email: email });
+			let invitee: IUser = await this.user.findOne({ email: email });
 			if (!invitee) {
-				await this.createUser({ email: email, password: password, isVerified: true }, invitationId);
+				invitee = await this.createUser({ email: email, password: password, isVerified: true }, invitationId);
 			}
 			await this.companyHelper.acceptInvite({ invitee, company, invitationId, reciever: email, role: inviteeRole });
 
@@ -179,7 +182,7 @@ export default class UserService extends UserHelper implements IUserService {
 			}
 
 			await this.comparePassword(password, user.password);
-			const accessToken = this.generateAccessToken(this.getUserSubset(user));
+			const accessToken = this.generateAccessToken({ id: user._id });
 			return accessToken;
 		} catch (err: any) {
 			throw this.handleError(err);
@@ -195,6 +198,9 @@ export default class UserService extends UserHelper implements IUserService {
 		try {
 			let { userId, code } = data;
 			const user = await this.user.findOne({ _id: userId });
+
+			// Validate provided "userId" to ensure it is a valid mongodb schema ID format
+			this.validateID(userId);
 
 			if (!user) {
 				throw this.userDoesNotExist(`There's no user account associated with the provided userId`);
@@ -281,6 +287,10 @@ export default class UserService extends UserHelper implements IUserService {
 	public async updatePassword(data: IUpdatePassword): Promise<void> {
 		try {
 			let { userId, code, newPassword } = data;
+
+			// Validate provided "userId" to ensure it is a valid mongodb schema ID format
+			this.validateID(userId);
+
 			const user = await this.user.findOne({ _id: userId });
 
 			if (!user) {
@@ -319,6 +329,25 @@ export default class UserService extends UserHelper implements IUserService {
 				redirectPath: 'login'
 			}
 			await this.sendNoTification(notificationData);
+		} catch (err) {
+			throw this.handleError(err);
+		}
+	}
+
+	/**
+	 * get user service
+	 * @param params
+	 * @returns User
+	 */
+	public async getUser(params: IDecodedToken): Promise<any> {
+		try {
+			const { id } = params;
+			const user = await this.user.findOne({ _id: id });
+			const companies = await this.company.find({ ownersId: id });
+			if (!user) {
+				throw this.userDoesNotExist(`There's no user account associated with the provided userId`);
+			}
+			return { user: this.getUserSubset(user), companiesOwnedByUser: companies };
 		} catch (err) {
 			throw this.handleError(err);
 		}
