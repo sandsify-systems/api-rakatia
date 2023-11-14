@@ -1,14 +1,15 @@
 import {
 	IUserService,
-	userSubset,
+	TypeUserSubset,
 	IUserSignUp,
 	IUserSignIn,
 	IAccessToken,
 	IVerifyAccount,
 	IUserEmail,
 	IUpdatePassword,
-	IUserId,
 	IDecodedToken,
+	IUpdateUser,
+	IGetUser,
 } from './dto/user.dto';
 import { Exception } from '../../core/utils';
 import { IUser, UserModelType } from '../../core/database/models/user/user.model';
@@ -20,7 +21,6 @@ import { INotification } from '../common/common.dto';
 import { Dictionary } from '../common/common.dto';
 import CompanyHelper from '../company/helper';
 import { ICompanyHelper } from '../company/dto/company.dto';
-import { ObjectId } from 'mongodb';
 
 export default class UserService extends UserHelper implements IUserService {
 	invitations: InvitationsModelType
@@ -35,9 +35,9 @@ export default class UserService extends UserHelper implements IUserService {
 	/**
 	 * User signup service 
 	 * @param data 
-	 * @returns userSubset
+	 * @returns TypeUserSubset
 	 */
-	async signUp(data: IUserSignUp): Promise<userSubset> {
+	async signUp(data: IUserSignUp): Promise<TypeUserSubset> {
 		try {
 			const { email, password, firstName, lastName, phoneNumber, profileImage, invitationId } = data;
 
@@ -79,7 +79,7 @@ export default class UserService extends UserHelper implements IUserService {
 	 * Create a verified user if invitation ID is given
 	 * @param userData 
 	 * @param invitationId 
-	 * @returns userSubset
+	 * @returns TypeUserSubset
 	 */
 	async createUser(userData: Dictionary, invitationId = null): Promise<IUser> {
 		try {
@@ -121,12 +121,12 @@ export default class UserService extends UserHelper implements IUserService {
 	/**
 	 * Create a new user by invitation and add the user to the invitation sender's staffs list
 	 * @param data 
-	 * @returns userSubset
+	 * @returns TypeUserSubset
 	 */
-	async signUpByInvitation(data: IUserSignUp): Promise<userSubset> {
+	async signUpByInvitation(data: IUserSignUp): Promise<TypeUserSubset> {
 		try {
 			const { email, password, invitationId } = data;
-			const invitation = await this.invitations.findOne({ _id: invitationId });
+			const invitation = await this.invitations.findOne({ _id: invitationId, recieversEmail: email });
 			const { sendersId, companyId, inviteeRole } = this.companyHelper.validateInvitation(invitation);
 
 			// get the user that sent the invitation
@@ -231,7 +231,7 @@ export default class UserService extends UserHelper implements IUserService {
 				throw new Exception('The verification code provided is not valid', 404);
 			}
 			// updated user status to verified
-			await this.updateUser({ _id: userId }, { isVerified: true });
+			await this.userUpdate({ _id: userId }, { isVerified: true });
 
 			// Send welcome email to user after successful account verification
 			const notificationData: INotification = {
@@ -319,7 +319,7 @@ export default class UserService extends UserHelper implements IUserService {
 			}
 			// updated user status to verified
 			newPassword = await this.hashPassword(newPassword);
-			await this.updateUser({ _id: userId }, { password: newPassword });
+			await this.userUpdate({ _id: userId }, { password: newPassword });
 			const notificationData: INotification = {
 				db: user,
 				reciever: user.email,
@@ -339,7 +339,7 @@ export default class UserService extends UserHelper implements IUserService {
 	 * @param params
 	 * @returns User
 	 */
-	public async getUser(params: IDecodedToken): Promise<any> {
+	public async getUser(params: IDecodedToken): Promise<IGetUser> {
 		try {
 			const { id } = params;
 			const user = await this.user.findOne({ _id: id });
@@ -348,6 +348,41 @@ export default class UserService extends UserHelper implements IUserService {
 				throw this.userDoesNotExist(`There's no user account associated with the provided userId`);
 			}
 			return { user: this.getUserSubset(user), companiesOwnedByUser: companies };
+		} catch (err) {
+			throw this.handleError(err);
+		}
+	}
+
+	/**
+	 * update user service
+	 * @param data
+	 * @returns 
+	 */
+	public async updateUser(data: IUpdateUser): Promise<TypeUserSubset> {
+		try {
+			let { id, firstName, lastName, phoneNumber } = data;
+
+			// Validate provided "userId" to ensure it is a valid mongodb schema ID format
+			this.validateID(id);
+
+			let user = await this.user.findOne({ _id: id });
+
+			if (!user) {
+				throw this.userDoesNotExist(`There's no user account associated with the provided userId`);
+			}
+
+			const name = (firstName && lastName) ? `${firstName} ${lastName}` : null;
+			const updated = await this.userUpdate({ _id: id }, { name, phoneNumber });
+			const notificationData: INotification = {
+				db: user,
+				reciever: user.email,
+				subject: 'Data updated',
+				template: 'user-updated',
+				templateData: {},
+				redirectPath: 'login'
+			}
+			await this.sendNoTification(notificationData);
+			return updated;
 		} catch (err) {
 			throw this.handleError(err);
 		}

@@ -2,16 +2,18 @@ import { IUser } from "../../../core/database/models/user/user.model";
 import { Request, Response, NextFunction } from "express";
 import { IUpload } from "../../common/common.dto";
 import { Types } from "mongoose";
+import { ICompany } from "../../../core/database/models/company/company.model";
 
 export interface IUserService {
-	signUp(data: IUserSignUp): Promise<userSubset>
+	signUp(data: IUserSignUp): Promise<TypeUserSubset>
 	createUser(userData: Dictionary, invitationId: string | null): Promise<IUser>
-	signUpByInvitation(data: IUserSignUp): Promise<userSubset>
+	signUpByInvitation(data: IUserSignUp): Promise<TypeUserSubset>
 	signIn(data: IUserSignIn): Promise<IAccessToken>
 	verifyAccount(data: IVerifyAccount): Promise<{ userId: string }>
 	resetPassword(data: IUserEmail): Promise<void>
 	updatePassword(data: IUpdatePassword): Promise<void>
-	getUser(param: Dictionary): Promise<any>
+	getUser(param: Dictionary): Promise<IGetUser>
+	updateUser(data: IUpdateUser): Promise<TypeUserSubset>
 }
 
 export interface IUserController {
@@ -21,6 +23,7 @@ export interface IUserController {
 	resetPassword(req: Request, res: Response, next: NextFunction): void
 	updatePassword(req: Request, res: Response, next: NextFunction): void
 	getUser(req: Request, res: Response, next: NextFunction): void
+	updateUser(req: Request, res: Response, next: NextFunction): void
 }
 
 export interface IUserHelper {
@@ -29,8 +32,8 @@ export interface IUserHelper {
 	generateAccessToken(data: { id: string }): IAccessToken
 	userExist(message: string): void
 	userDoesNotExist(message: string): void
-	getUserSubset(user: IUser): userSubset
-	updateUser(params: Dictionary, data: userSubset): void
+	getUserSubset(user: IUser): TypeUserSubset
+	userUpdate(params: Dictionary, data: TypeUserSubset): void
 }
 
 export interface IUserSignUp {
@@ -43,13 +46,26 @@ export interface IUserSignUp {
 	invitationId?: string
 }
 
+export interface IUpdateUser {
+	id: Types.ObjectId,
+	firstName?: string
+	lastName?: string
+	phoneNumber?: string
+	profileImage?: IUpload | null
+}
+
+export interface IGetUser {
+	user: TypeUserSubset,
+	companiesOwnedByUser: ICompany[]
+}
+
 export interface IUserSignIn {
 	email: string
 	password: string
 	phoneNumber?: string
 }
 
-export type userSubset = Pick<
+export type TypeUserSubset = Pick<
 	IUser,
 	'name' |
 	'email' |

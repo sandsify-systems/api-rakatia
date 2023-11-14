@@ -18,7 +18,7 @@ export default class UserController implements IUserController {
 
 	async signUp(req: Request, res: Response, next: NextFunction): Promise<void> {
 		try {
-			let upload = req.files
+			let upload = req.files;
 			const profileImage = upload?.profileImage ? await this.helper.getUploadedFile(<UploadedFile>upload?.profileImage) : null;
 			req.body.profileImage = profileImage;
 			const data = await this.userService.signUp(req.body);
@@ -68,6 +68,18 @@ export default class UserController implements IUserController {
 		try {
 			const user = await this.userService.getUser(req.token);
 			this.resMsg('User retrieved successfully', user, res, 200);
+		} catch (error) {
+			next(error);
+		}
+	}
+
+	async updateUser(req: CustomRequest, res: Response, next: NextFunction): Promise<void> {
+		try {
+			let upload = req.files;
+			const profileImage = upload?.profileImage ? await this.helper.getUploadedFile(<UploadedFile>upload?.profileImage) : null;
+			const { token, body } = req;
+			const user = await this.userService.updateUser({ ...token, ...body, profileImage });
+			this.resMsg('User updated successfully', user, res, 200);
 		} catch (error) {
 			next(error);
 		}
