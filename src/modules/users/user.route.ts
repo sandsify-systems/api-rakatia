@@ -5,7 +5,8 @@ import {
     verifyValidation,
     resetPassword,
     updatePassword,
-    getUser
+    getUser,
+    updateUserValidation
 } from '../../core/validation/users.validation';
 import { validateRequest } from '../../core/validation/index';
 import UserController from './user.controller';
@@ -80,6 +81,17 @@ users.get(
     getUser,
     validateRequest,
     (req: CustomRequest, res: Response, next: NextFunction) => userController.getUser(req, res, next)
+);
+
+/**
+ * Update user API route
+ */
+users.put(
+    '/update',
+    authoriseRequest,
+    updateUserValidation,
+    validateRequest,
+    (req: CustomRequest, res: Response, next: NextFunction) => userController.updateUser(req, res, next)
 );
 
 export default users;

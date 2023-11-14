@@ -3,11 +3,12 @@ import jwt from 'jsonwebtoken';
 import { Exception } from '../../../core/utils';
 import { IUser } from '../../../core/database/models/user/user.model';
 import {
-	userSubset,
+	TypeUserSubset,
 	IAccessToken,
 	IUserHelper,
 	Dictionary,
 	IUserId,
+	IUpdateUser,
 } from '../dto/user.dto';
 import _ from 'lodash';
 import { UserModelType } from "../../../core/database/models/user/user.model";
@@ -52,7 +53,7 @@ export default class UserHelper extends CommonHelper implements IUserHelper {
 		throw new Exception(message, 404);
 	}
 
-	getUserSubset(user: IUser): userSubset {
+	getUserSubset(user: IUser): TypeUserSubset {
 		const pick = _.pick(user, [
 			'name',
 			'email',
@@ -65,7 +66,8 @@ export default class UserHelper extends CommonHelper implements IUserHelper {
 		return pick;
 	}
 
-	async updateUser(params: Dictionary, data: Dictionary): Promise<void> {
-		await this.user.updateOne(params, data);
+	async userUpdate(params: Dictionary, data: Dictionary): Promise<TypeUserSubset> {
+		const user = await this.user.updateOne(params, data);
+		return this.getUserSubset(await this.user.findOne(params));
 	}
 }

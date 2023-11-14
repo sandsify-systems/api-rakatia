@@ -114,9 +114,9 @@ export default class CompanyService extends CompanyHelper implements ICompanySer
 			};
 
 			// validate company ID 
-			const company = await this.company.findOne({ _id: companyId });
+			const company = await this.company.findOne({ _id: companyId, ownersId: sender._id });
 			if (!company) {
-				throw this.companyDoesNotExist(`There's not company associated with the provided "companyId"`)
+				throw this.companyDoesNotExist(`User does not own a company associated with the provided "companyId"`)
 			};
 
 			// check if the invitee is already a member of the company with the provided company ID

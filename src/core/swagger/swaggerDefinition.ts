@@ -7,6 +7,7 @@ import {
     updatePassword,
 } from '../../modules/users/doc/user.auth.doc';
 import { getUser } from '../../modules/users/doc/user.get.doc';
+import { updateUser } from '../../modules/users/doc/user.update.doc';
 import {
     createComapnyApiDoc,
     sendInvitationApiDoc,
@@ -39,7 +40,8 @@ const swaggerDefinition = swaggerJSDoc({
             '/company/create': { ...createComapnyApiDoc },
             '/company/send-invitation': { ...sendInvitationApiDoc },
             '/company/accept-invitation': { ...acceptInvitationApiDoc },
-            '/users': { ...getUser }
+            '/users': { ...getUser },
+            '/users/update': { ...updateUser },
         },
     },
     basePath: '/',

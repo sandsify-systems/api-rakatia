@@ -31,7 +31,7 @@ export default class CompanyHelper extends CommonHelper implements ICommonHelper
 	validateInvitation(invite: Iinvitations | null): Iinvitations {
 
 		if (!invite) {
-			throw new Exception('Can not find the initation with the given "invitationId"', 402);
+			throw new Exception('Invitation not or has expired', 402);
 		}
 		if (invite.invitationStatus === 'accepted') {
 			throw new Exception('Invitation already accepted please proceed to login', 402)

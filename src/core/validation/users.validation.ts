@@ -57,3 +57,13 @@ export const updatePassword = [
 
 export const getUser = [
 ]
+
+export const updateUserValidation = [
+	check('firstName').isString().optional(),
+	check('lastName').isString().optional(),
+	check('phoneNumber')
+		.isString()
+		.isLength({ min: 11, max: 14 })
+		.withMessage('phone number must be min of 11 or max of 14 didgits')
+		.optional()
+];
