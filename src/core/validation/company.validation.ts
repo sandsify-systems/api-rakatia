@@ -1,4 +1,4 @@
-import { check } from 'express-validator';
+import { check, query } from 'express-validator';
 
 export const createCompanyValidation = [
 	check('ownersId').isString().notEmpty().withMessage('company owner\'s id is required'),
@@ -31,4 +31,8 @@ export const sendInvitationValidation = [
 
 export const acceptInvitationValidation = [
 	check('invitationId').isString().notEmpty().withMessage('invitationId is required'),
+];
+
+export const getCompanyValidation = [
+	query('companyId').isString().withMessage('companyId must be a string').optional(),
 ];

@@ -2,7 +2,8 @@ import { Router, Request, Response, NextFunction } from 'express';
 import {
     createCompanyValidation,
     sendInvitationValidation,
-    acceptInvitationValidation
+    acceptInvitationValidation,
+    getCompanyValidation
 } from '../../core/validation/company.validation';
 import { validateRequest } from '../../core/validation/index';
 import CompanyController from './company.controller';
@@ -48,5 +49,17 @@ company.post(
     acceptInvitationValidation,
     validateRequest,
     (req: CustomRequest, res: Response, next: NextFunction) => companyController.acceptInvitation(req, res, next)
+);
+
+
+/**
+ * Get companies owned by a user
+*/
+company.get(
+    '/',
+    authoriseRequest,
+    getCompanyValidation,
+    validateRequest,
+    (req: CustomRequest, res: Response, next: NextFunction) => companyController.getCompany(req, res, next)
 );
 export default company;

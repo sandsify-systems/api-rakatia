@@ -4,14 +4,15 @@ import {
 	ICompanySignUp,
 	ISendInvitation,
 	comapnySubset,
+	IGetCompanyParams
 } from './dto/company.dto';
 import { UserModelType } from '../../core/database/models/user/user.model';
-import { CompanyModelType } from '../../core/database/models/company/company.model';
+import { CompanyModelType, ICompany } from '../../core/database/models/company/company.model';
 import CompanyHelper from './helper';
 import { INotification } from '../common/common.dto';
 import { InvitationsModelType } from '../../core/database/models/invitations/invitations.model';
 import UserHelper from '../users/helper';
-import { IUserHelper } from '../users/dto/user.dto';
+import { IDecodedToken, IUserHelper } from '../users/dto/user.dto';
 import { Exception } from '../../core/utils';
 import { ObjectId } from 'mongodb';
 
@@ -195,6 +196,24 @@ export default class CompanyService extends CompanyHelper implements ICompanySer
 
 			await this.acceptInvite({ invitee, company, invitationId, reciever: invitee.email, role: inviteeRole });
 		} catch (err: any) {
+			throw this.handleError(err);
+		}
+	}
+
+	/**
+	 * get user companies service
+	 * @param params:IGetCompanyParams
+	 * @returns Companies
+	 */
+	public async getCompany(params: IGetCompanyParams): Promise<ICompany[]> {
+		try {
+			const { ownersId } = params;
+			const user = await this.user.findOne({ _id: ownersId });
+			if (!user) {
+				throw this.userHelper.userDoesNotExist(`There's no user account associated with the provided userId`);
+			}
+			return await this.company.find(params);
+		} catch (err) {
 			throw this.handleError(err);
 		}
 	}

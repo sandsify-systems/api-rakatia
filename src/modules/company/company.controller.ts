@@ -1,10 +1,15 @@
 import { type NextFunction, type Response } from 'express';
 import { IResMsg } from '../../core/utils/response';
-import { ICompanyController, ICompanyService } from './dto/company.dto';
+import {
+	ICompanyController,
+	ICompanyService,
+	IGetCompanyParams
+} from './dto/company.dto';
 import { UploadedFile } from 'express-fileupload';
 import { ICommonHelper } from '../common/common.dto';
 import CommonHelper from '../common';
 import { CustomRequest } from '../../core/utils/authorizationMiddleWare';
+import { param } from 'express-validator';
 
 
 export default class CompanyController implements ICompanyController {
@@ -43,6 +48,17 @@ export default class CompanyController implements ICompanyController {
 			await this.companyService.acceptInvitation(req.body);
 			this.resMsg('Invitation accepted successfully', null, res, 200);
 		} catch (error: any) {
+			next(error);
+		}
+	}
+
+	async getCompany(req: CustomRequest, res: Response, next: NextFunction): Promise<void> {
+		try {
+			let params: IGetCompanyParams = { ownersId: req.token.id };
+			if (req.query.companyId) params._id = req.query.companyId as string;
+			const company = await this.companyService.getCompany(params);
+			this.resMsg('Company retrieved successfully', company, res, 200);
+		} catch (error) {
 			next(error);
 		}
 	}

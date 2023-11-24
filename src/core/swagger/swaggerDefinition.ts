@@ -11,8 +11,9 @@ import { updateUser } from '../../modules/users/doc/user.update.doc';
 import {
     createComapnyApiDoc,
     sendInvitationApiDoc,
-    acceptInvitationApiDoc
+    acceptInvitationApiDoc,
 } from '../../modules/company/doc/company.doc';
+import { getCompany } from '../../modules/company/doc/company.get.doc';
 
 const swaggerDefinition = swaggerJSDoc({
     swaggerDefinition: {
@@ -42,6 +43,7 @@ const swaggerDefinition = swaggerJSDoc({
             '/company/accept-invitation': { ...acceptInvitationApiDoc },
             '/users': { ...getUser },
             '/users/update': { ...updateUser },
+            '/company': { ...getCompany },
         },
     },
     basePath: '/',
