@@ -4,17 +4,20 @@ import { Dictionary, IUpload } from "../../common/common.dto";
 import { Types } from 'mongoose';
 import { Iinvitations } from "../../../core/database/models/invitations/invitations.model";
 import { IUser } from "../../../core/database/models/user/user.model";
+import { IDecodedToken } from "../../users/dto/user.dto";
 
 export interface ICompanyService {
 	createCompany(data: ICompanySignUp): Promise<comapnySubset>
 	sendInvitation(data: ISendInvitation): Promise<void>
 	acceptInvitation(data: IAcceptInvitation): Promise<void>
+	getCompany(params: IGetCompanyParams): Promise<ICompany[]>
 }
 
 export interface ICompanyController {
 	createCompany(req: Request, res: Response, next: NextFunction): void
 	sendInvitation(req: Request, res: Response, next: NextFunction): void
 	acceptInvitation(req: Request, res: Response, next: NextFunction): void
+	getCompany(req: Request, res: Response, next: NextFunction): void
 }
 
 export interface ICompanyHelper {
@@ -58,9 +61,14 @@ export interface ISendInvitation {
 }
 
 export interface IAcceptInvitation {
-	invitee:IUser
-	company:ICompany
-	invitationId:Types.ObjectId 
-	reciever:string, 
+	invitee: IUser
+	company: ICompany
+	invitationId: Types.ObjectId
+	reciever: string
 	role: string
+}
+
+export interface IGetCompanyParams {
+	ownersId: string
+	_id?: string
 }
