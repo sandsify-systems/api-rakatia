@@ -3,7 +3,8 @@ import {
     createCompanyValidation,
     sendInvitationValidation,
     acceptInvitationValidation,
-    getCompanyValidation
+    getCompanyValidation,
+    updateCompanyValidation
 } from '../../core/validation/company.validation';
 import { validateRequest } from '../../core/validation/index';
 import CompanyController from './company.controller';
@@ -62,4 +63,16 @@ company.get(
     validateRequest,
     (req: CustomRequest, res: Response, next: NextFunction) => companyController.getCompany(req, res, next)
 );
+
+/**
+ * Update company API route
+ */
+company.put(
+    '/update',
+    authoriseRequest,
+    updateCompanyValidation,
+    validateRequest,
+    (req: CustomRequest, res: Response, next: NextFunction) => companyController.updateCompany(req, res, next)
+);
+
 export default company;

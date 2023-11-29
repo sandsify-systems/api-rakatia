@@ -4,12 +4,13 @@ import {
 	ICompanySignUp,
 	ISendInvitation,
 	comapnySubset,
-	IGetCompanyParams
+	IGetCompanyParams,
+	ICompanyUpdate
 } from './dto/company.dto';
 import { UserModelType } from '../../core/database/models/user/user.model';
 import { CompanyModelType, ICompany } from '../../core/database/models/company/company.model';
 import CompanyHelper from './helper';
-import { INotification } from '../common/common.dto';
+import { Dictionary, INotification } from '../common/common.dto';
 import { InvitationsModelType } from '../../core/database/models/invitations/invitations.model';
 import UserHelper from '../users/helper';
 import { IDecodedToken, IUserHelper } from '../users/dto/user.dto';
@@ -213,6 +214,54 @@ export default class CompanyService extends CompanyHelper implements ICompanySer
 				throw this.userHelper.userDoesNotExist(`There's no user account associated with the provided userId`);
 			}
 			return await this.company.find(params);
+		} catch (err) {
+			throw this.handleError(err);
+		}
+	}
+
+	/**
+	 * update company service
+	 * @param data
+	 * @returns company
+	 */
+	public async updateCompany(data: ICompanyUpdate): Promise<comapnySubset> {
+		try {
+			let { ownersId, companyId, logo } = data;
+
+			// Validate provided "userId" to ensure it is a valid mongodb schema ID format
+			this.validateID(ownersId);
+
+			let user = await this.user.findOne({ _id: ownersId });
+			if (!user) {
+				throw this.userHelper.userDoesNotExist(`There's no user account associated with the provided userId`);
+			}
+
+			// get the company 
+			const company = await this.company.findOne({ _id: companyId, ownersId: ownersId });
+			if (!company) {
+				throw this.companyDoesNotExist(`There's no company associated with the provided companyId`);
+			}
+
+			if (logo) {
+				const { public_id, secure_url } = await this.uploadToCloudinary(logo, 'company_logo');
+				data.logoPublicId = public_id;
+				data.logoUrl = secure_url
+				delete data.logo;
+			}
+
+			delete data.ownersId;
+			delete data.companyId;
+			await this.company.updateOne({ _id: companyId }, data);
+			const notificationData: INotification = {
+				db: user,
+				reciever: user.email,
+				subject: 'Company data updated',
+				template: 'company-updated',
+				templateData: {},
+				redirectPath: 'login'
+			}
+			await this.sendNoTification(notificationData);
+			return await this.company.findOne({ _id: companyId, ownersId: ownersId });
 		} catch (err) {
 			throw this.handleError(err);
 		}

@@ -1,20 +1,32 @@
 import errorResponsesDoc from "../../../core/swagger/errorResponses.doc";
 
-const updateRequestBody = {
-    firstName: {
-        type: 'string',
+const updateCompanyBody = {
+    companyId: {
+      type: 'string',
     },
-    lastName: {
-        type: 'string',
+    name: {
+      type: 'string',
+    },
+    email: {
+      type: 'string',
     },
     phoneNumber: {
-        type: 'string',
+      type: 'string',
     },
-}
+    address: {
+      type: 'string',
+    },
+    industry: {
+      type: 'string',
+    },
+    website: {
+      type: 'string',
+    }
+  };  
 
-export const updateUser = {
+export const updateCompany = {
     put: {
-        description: 'Update a user',
+        description: 'Update a company data',
         security: [{
             bearerAuth: []
         }],
@@ -24,17 +36,19 @@ export const updateUser = {
                 'application/json': {
                     schema: {
                         type: 'object',
+                        required: ['comapnyId'],
                         properties: {
-                            ...updateRequestBody
+                            ...updateCompanyBody
                         },
                     },
                 },
                 'multipart/form-data': {
                     schema: {
                         type: 'object',
+                        required: ['companyId'],
                         properties: {
-                            ...updateRequestBody,
-                            profileImage: {
+                            ...updateCompanyBody,
+                            logo: {
                                 type: 'string',
                                 format: 'binary',
                             },
@@ -45,24 +59,26 @@ export const updateUser = {
         },
         responses: {
             '200': {
-                description: 'Update user API Success Response Example',
+                description: 'Update Company API Success Response Example',
                 content: {
                     'application/json': {
                         schema: {
                             type: 'object',
                             properties: {
-                                ...updateRequestBody
+                                ...updateCompanyBody
                             },
                         },
                         example: {
                             status: 'success',
-                            message: 'User data updated successfully',
+                            message: 'Company data updated successfully',
                             data: {
-                                'firstName': 'test_user_fisrtname',
-                                'lastName': 'test_user_lastname',
+                                'name': 'comapny_name',
+                                'email': 'company@test.com',
                                 'phoneNumber': '+2341111111111',
-                                'imageUrl': 'https://user_image_url',
-                                'imagePublicId': 'user_image_id',
+                                'logoUrl': 'https://user_image_url',
+                                'logoPublicId': 'user_image_id',
+                                'address': 'comapny_address',
+                                'website': 'comapany_website',
                                 '_id': '652a9deb54f77f7814bfe99f'
                             }
                         },
@@ -70,7 +86,7 @@ export const updateUser = {
                 }
             },
             '404': {
-                description: 'Update user API Error Response Example',
+                description: 'Update Company API Error Response Example',
                 content: {
                     'application/json': {
                         schema: {
@@ -84,7 +100,7 @@ export const updateUser = {
                         example: {
                             status: 'error',
                             statusCode: 404,
-                            message: `User id is required`,
+                            message: `Company id is required`,
                             data: null
                         },
                     },

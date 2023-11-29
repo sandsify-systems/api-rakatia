@@ -11,6 +11,7 @@ export interface ICompanyService {
 	sendInvitation(data: ISendInvitation): Promise<void>
 	acceptInvitation(data: IAcceptInvitation): Promise<void>
 	getCompany(params: IGetCompanyParams): Promise<ICompany[]>
+	updateCompany(data: ICompanyUpdate): Promise<comapnySubset>
 }
 
 export interface ICompanyController {
@@ -18,6 +19,7 @@ export interface ICompanyController {
 	sendInvitation(req: Request, res: Response, next: NextFunction): void
 	acceptInvitation(req: Request, res: Response, next: NextFunction): void
 	getCompany(req: Request, res: Response, next: NextFunction): void
+	updateCompany(req: Request, res: Response, next: NextFunction): void
 }
 
 export interface ICompanyHelper {
@@ -71,4 +73,18 @@ export interface IAcceptInvitation {
 export interface IGetCompanyParams {
 	ownersId: string
 	_id?: string
+}
+
+export interface ICompanyUpdate {
+	companyId: Types.ObjectId
+	ownersId: Types.ObjectId
+	name?: string
+	email?: string
+	address?: string
+	phoneNumber?: string
+	website?: string
+	industry?: string
+	logoPublicId?: string
+	logoUrl?: string
+	logo?: IUpload | null
 }

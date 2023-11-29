@@ -360,7 +360,7 @@ export default class UserService extends UserHelper implements IUserService {
 	 */
 	public async updateUser(data: IUpdateUser): Promise<TypeUserSubset> {
 		try {
-			let { id, firstName, lastName, phoneNumber } = data;
+			let { id, firstName, lastName, phoneNumber, profileImage } = data;
 
 			// Validate provided "userId" to ensure it is a valid mongodb schema ID format
 			this.validateID(id);
@@ -372,7 +372,14 @@ export default class UserService extends UserHelper implements IUserService {
 			}
 
 			const name = (firstName && lastName) ? `${firstName} ${lastName}` : null;
-			const updated = await this.userUpdate({ _id: id }, { name, phoneNumber });
+			const userData: Dictionary = { name, phoneNumber };
+			if (profileImage) {
+				const { public_id, secure_url } = await this.uploadToCloudinary(profileImage, 'profile_image');
+				userData.imagePublicId = public_id;
+				userData.imageUrl = secure_url
+			}
+			const updated = await this.userUpdate({ _id: id }, userData);
+			
 			const notificationData: INotification = {
 				db: user,
 				reciever: user.email,
