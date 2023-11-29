@@ -62,4 +62,16 @@ export default class CompanyController implements ICompanyController {
 			next(error);
 		}
 	}
+
+	async updateCompany(req: CustomRequest, res: Response, next: NextFunction): Promise<void> {
+		try {
+			let upload = req.files
+			const logo = upload?.logo ? await this.helper.getUploadedFile(<UploadedFile>upload?.logo) : null;
+			const { token, body } = req;
+			const comapny = await this.companyService.updateCompany({ ...body, ownersId:token.id, logo });
+			this.resMsg('Company data updated successfully', comapny, res, 200);
+		} catch (error) {
+			next(error);
+		}
+	}
 }

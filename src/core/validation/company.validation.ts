@@ -36,3 +36,17 @@ export const acceptInvitationValidation = [
 export const getCompanyValidation = [
 	query('companyId').isString().withMessage('companyId must be a string').optional(),
 ];
+
+export const updateCompanyValidation = [
+	check('companyId').isString().notEmpty().withMessage('company id is required'),
+	check('name').isString().optional(),
+	check('address').isString().optional(),
+	check('email').isEmail().withMessage('email is not a valid email').optional(),
+	check('phoneNumber')
+		.isString()
+		.isLength({ min: 11, max: 14 })
+		.withMessage('phone number must be min of 11 or max of 14 didgits')
+		.optional(),
+	check('website').isString().optional().isURL().withMessage('Company website must be a valid url e.g: https://company-name.com'),
+	check('industry').isString().optional()
+];
