@@ -9,6 +9,7 @@
     "clean": "tsc --build --clean",
     "start:dev": "cross-env NODE_ENV=dev ts-node-dev ./src/main.ts",
     "start": "node ./dist/src/main.js",
+    "prestart": "ts-node-dev ejs.copy.ts",
     "lint": "eslint src/**/*.ts",
     "format": "eslint src/**/*.ts --fix",
     "prepare": "husky install",

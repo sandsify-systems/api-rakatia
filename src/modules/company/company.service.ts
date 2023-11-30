@@ -237,7 +237,7 @@ export default class CompanyService extends CompanyHelper implements ICompanySer
 			}
 
 			// get the company 
-			const company = await this.company.findOne({ _id: companyId, ownersId: ownersId });
+			let company = await this.company.findOne({ _id: companyId, ownersId: ownersId });
 			if (!company) {
 				throw this.companyDoesNotExist(`There's no company associated with the provided companyId`);
 			}
@@ -246,12 +246,12 @@ export default class CompanyService extends CompanyHelper implements ICompanySer
 				const { public_id, secure_url } = await this.uploadToCloudinary(logo, 'company_logo');
 				data.logoPublicId = public_id;
 				data.logoUrl = secure_url
-				delete data.logo;
 			}
 
+			delete data.logo;
 			delete data.ownersId;
 			delete data.companyId;
-			await this.company.updateOne({ _id: companyId }, data);
+			company = await this.company.findOneAndUpdate({ _id: companyId }, { $set: data }, { new: true });
 			const notificationData: INotification = {
 				db: user,
 				reciever: user.email,
@@ -261,7 +261,7 @@ export default class CompanyService extends CompanyHelper implements ICompanySer
 				redirectPath: 'login'
 			}
 			await this.sendNoTification(notificationData);
-			return await this.company.findOne({ _id: companyId, ownersId: ownersId });
+			return this.getCompanySubset(company);
 		} catch (err) {
 			throw this.handleError(err);
 		}
