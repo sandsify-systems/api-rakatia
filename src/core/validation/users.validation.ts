@@ -4,19 +4,18 @@ export const signUpValidation = [
 	check('firstName').isString().optional(),
 	check('lastName').isString().optional(),
 	check('email')
-		.isEmail()
-		.withMessage('email is not a valid email')
-		.notEmpty()
-		.withMessage('email is required'),
+		.notEmpty().withMessage('email is required')
+		.isEmail().withMessage('the supplied email is not valid'),
 	check('password')
-		.isString()
-		.notEmpty()
-		.isLength({ min: 8 })
-		.withMessage('password is required and minimum of 8 characters'),
+		.notEmpty().withMessage('password is required')
+		.isString().withMessage('password must be a string')
+		.isLength({ min: 8 }).withMessage('password nust contain minimum of 8 characters'),
 	check('phoneNumber')
 		.isString()
-		.isLength({ min: 11, max: 14 })
-		.withMessage('phone number must be min of 11 or max of 14 didgits')
+		.isLength({ min: 11 })
+		.withMessage('phone number must be min of 11 didgits')
+		.isLength({ max: 14 })
+		.withMessage('phone number must be max of 14 didgits')
 		.optional(),
 	check('invitationId')
 		.isString()
@@ -24,16 +23,12 @@ export const signUpValidation = [
 ];
 
 export const signInValidation = [
-	check('email')
-		.isEmail()
-		.withMessage('email is not a valid email')
-		.notEmpty()
-		.withMessage('email is required'),
+	check('email').notEmpty().withMessage('email is required'),
+	check('password').notEmpty().withMessage('password is required')
 	// check('phoneNumber')
 	// 	.optional()
 	// 	.isString()
 	// 	.withMessage('phoneNumber should be a string'),
-	check('password').isString().notEmpty().withMessage('password is required'),
 ];
 
 export const verifyValidation = [
