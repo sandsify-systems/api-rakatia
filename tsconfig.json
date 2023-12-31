@@ -4,7 +4,8 @@
     "target": "es6",
     "rootDir": "./",
     "types": [
-      "node"
+      "node",
+      "jest"
     ],
     "outDir": "./dist",
     "allowJs": false,
@@ -12,5 +13,6 @@
     "inlineSourceMap": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-  }
+  }, 
+  "exclude": ["node_modules", "__test__", "dist"],
 }

@@ -105,3 +105,6 @@ dist
 
 # editor config
 .vscode/*
+
+# Yarn
+.yarn/*
