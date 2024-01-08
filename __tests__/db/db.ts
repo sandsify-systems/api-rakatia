@@ -4,6 +4,7 @@ import { log } from '../../src/core/utils';
 import mongoose from 'mongoose';
 import { Dictionary, IUserSignUp } from '../../src/modules/users/dto/user.dto';
 import User from '../../src/core/database/models/user/user.model';
+import moment from 'moment';
 
 const { TEST_DATABASE_URL } = process.env;
 
@@ -26,10 +27,21 @@ export const disconnectTestDb = async () => {
     }
 };
 
+export const getUser = async (params: Dictionary) => {
+    try {
+        let user = await User.findOne(params);
+        log.info('Test user fetched successfully...');
+        return user;
+    } catch (E) {
+        log.error('error occured while fetching test user');
+    }
+}
+
 export const createUser = async (data: IUserSignUp) => {
     try {
-        return await new User(data).save();
+        let user = await new User(data).save();
         log.info('Test user created successfully...');
+        return user;
     } catch (E) {
         log.error('error occured while creating test user');
     }
@@ -37,8 +49,9 @@ export const createUser = async (data: IUserSignUp) => {
 
 export const updateUser = async (params: Dictionary, data: Dictionary) => {
     try {
-        return await new User().updateOne(params, data);
+        await User.updateOne(params, data);
         log.info('Test user updated successfully...');
+        return await getUser(params);
     } catch (E) {
         log.error('error occured while updating test user');
     }
@@ -61,6 +74,12 @@ export const clearDb = async () => {
         log.error('error occured while clearing DB');
     }
 }
+
+export const createExpiredCode = (code: string): string => {
+    // back to 5 days ago
+    const expiry = moment(new Date(), "YYYY-MM-DD HH:mm:ss").subtract(5, 'days').format("YYYY-MM-DD HH:mm:ss");
+    return `${code.split('|')[0]}|${expiry}`;
+};
 
 export const userData = {
     email: 'test_user@test.com',

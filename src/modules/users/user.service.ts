@@ -197,10 +197,9 @@ export default class UserService extends UserHelper implements IUserService {
 	public async verifyAccount(data: IVerifyAccount): Promise<{ userId: string }> {
 		try {
 			let { userId, code } = data;
-			const user = await this.user.findOne({ _id: userId });
-
 			// Validate provided "userId" to ensure it is a valid mongodb schema ID format
 			this.validateID(userId);
+			const user = await this.user.findOne({ _id: userId });
 
 			if (!user) {
 				throw this.userDoesNotExist(`There's no user account associated with the provided userId`);
@@ -379,7 +378,7 @@ export default class UserService extends UserHelper implements IUserService {
 				userData.imageUrl = secure_url
 			}
 			const updated = await this.userUpdate({ _id: id }, userData);
-			
+
 			const notificationData: INotification = {
 				db: user,
 				reciever: user.email,
