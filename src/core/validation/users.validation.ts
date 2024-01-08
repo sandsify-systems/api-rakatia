@@ -32,8 +32,8 @@ export const signInValidation = [
 ];
 
 export const verifyValidation = [
-	check('userId').isString().notEmpty().withMessage('user id is required').withMessage('user id must be a string'),
-	check('code').isString().notEmpty().withMessage('verification code is required'),
+	check('userId').notEmpty().withMessage('user id is required'),
+	check('code').notEmpty().withMessage('verification code is required'),
 ];
 
 export const resetPassword = [
@@ -45,9 +45,14 @@ export const resetPassword = [
 ];
 
 export const updatePassword = [
-	check('userId').isString().notEmpty().withMessage('user id is required').withMessage('user id must be a string'),
-	check('code').isString().notEmpty().withMessage('verification code is required'),
-	check('newPassword').isString().notEmpty().withMessage('verification code is required'),
+	check('userId')
+		.isString().withMessage('user id must be a string')
+		.notEmpty().withMessage('user id is required'),
+	check('code')
+	.isString().withMessage('code must be a string')
+	.notEmpty().withMessage('verification code is required'),
+	check('newPassword')
+	.notEmpty().withMessage('new password is required'),
 ];
 
 export const getUser = [
