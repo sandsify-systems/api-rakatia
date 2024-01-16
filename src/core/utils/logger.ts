@@ -7,6 +7,7 @@ const logger = winston.createLogger({
 		format.timestamp({
 			format: 'YYYY-MM-DD HH:mm:ss',
 		}),
+		format.colorize(),
 		format.printf((info) => `${info.timestamp} ${info.level}: ${info.message}`)
 	),
 	transports: [
@@ -14,22 +15,24 @@ const logger = winston.createLogger({
 			filename: 'error.log',
 			level: 'error',
 		}),
+		new transports.Console()
 	],
 });
 
-if (process.env.NODE_ENV !== 'production') {
-	logger.add(
-		new transports.Console({
-			format: format.combine(
-				format.colorize(),
-				format.printf(
-					(info) => `${info.timestamp} ${info.level}: ${info.message}`
-				)
-			),
-			level: 'error',
-		})
-	);
-}
+// if (process.env.NODE_ENV !== 'production') {
+// 	logger.add(
+// 		new transports.Console({
+// 			format: format.combine(
+// 				format.colorize(),
+// 				// winston.format.json(),
+// 				format.printf(
+// 					(info) => `${info.timestamp} ${info.level}: ${info.message}`
+// 				)
+// 			),
+// 			level: 'error',
+// 		})
+// 	);
+// }
 
 log4js.addLayout(
 	'json',
